@@ -1,0 +1,225 @@
+<?php
+
+class ProcessDiagnostics extends Process
+{
+    public static function getModuleInfo()
+    {
+        return array(
+            'title'     => __('Diagnostics Page', __FILE__),
+            'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
+            'version'   => 1,
+            'permanent' => false,
+            'autoload'  => true,
+            'singular'  => true,
+            'author'    => 'Stephen Dickinson, QBox',
+        );
+    }
+
+
+    public function init()
+    {
+        parent::init();
+
+        $this->server_software = '';
+        if (isset($_SERVER['SERVER_SOFTWARE'])) {
+            $this->server_software = $_SERVER['SERVER_SOFTWARE'];
+        } else if (isset($_SERVER['HTTP_HOST'])) {
+            $this->server_software = $_SERVER['HTTP_HOST'];
+        }
+
+        $this->is_apache = (($this->server_software && stristr($this->server_software, 'apache')) || is_callable('apache_get_version'));
+    }
+
+
+    /**
+     * Returns a diagnostic array about the current version of PHP and how that ties in with the version needed by PW.
+     *
+     * TODO: Have PW define it's required PHP version in the core, not just the installer.
+     */
+    protected function getPHPDiagnostics()
+    {
+        $fail_limit = '5.3.0';
+
+        $status = $this->_('Ok');
+        $action = '';
+        if (version_compare(PHP_VERSION, $fail_limit) < 0) {
+            $status = $this->_('Fail');
+            $action = $this->_("Upgrade your PHP installation to at least version ").$fail_limit;
+        }
+
+        $results[] = array(
+            'title'  => $this->_('PHP Version'),
+            'value'  => PHP_VERSION,
+            'status' => $status,
+            'action' => $action,
+        );
+
+        return $results;
+    }
+
+
+    /**
+     * Returns a diagnostic array about the current time settings.
+     */
+    protected function getTimeDiagnostics()
+    {
+        $results[] = array(
+            'title'  => $this->_('Timezone'),
+            'value'  => $this->wire->config->timezone,
+            'status' => $this->_('Ok'),
+            'action' => '',
+        );
+
+        return $results;
+    }
+
+
+    /**
+     * Returns a diagnostic array about the webserver.
+     *
+     * For Apache, this also checks if the .htaccess file is in the right place and is readable by the webserver.
+     */
+    protected function getWebserverDiagnostics()
+    {
+        $results[] = array(
+            'title'  => $this->_('Webserver'),
+            'value'  => $this->server_software,
+            'status' => $this->_('Ok'),
+            'action' => '',
+        );
+
+        if ($this->is_apache) {
+            $htaccess_ok  = is_readable($this->wire->config->paths->root . '/.htaccess');
+            $htaccess_txt = is_readable($this->wire->config->paths->root . '/htaccess.txt');
+
+            $results[] = array(
+                'title'  => $this->_('.htaccess file'),
+                'value'  => $htaccess_ok ? '' : $this->_('Cannot be read.'),
+                'status' => $htaccess_ok ? $this->_('Ok') : $this->_('Fail'),
+                'action' => $htaccess_ok ? $this->_('Present and readable.') : ($htaccess_txt ? $this->_('Rename htaccess.txt to .htaccess and make sure it is readable by the webserver user.') : $this->_('Make sure .htaccess is readable by the webserver user.')),
+            );
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * TODO extend these checks to cover other users in the system, not just the webserver user. For example, if a dir
+     * is 777 it's probably too wide open and at least needs a warning generated.
+     */
+    protected function getFilesystemDiagnostics()
+    {
+        $root_ok     = !is_writable($this->wire->config->paths->root)      && is_readable($this->wire->config->paths->root);
+        $admin_ok    = !is_writable($this->wire->config->paths->admin)     && is_readable($this->wire->config->paths->admin);
+        $assets_ok   =  is_writable($this->wire->config->paths->assets);
+        $cache_ok    =  is_writable($this->wire->config->paths->cache);
+        $sessions_ok =  is_writable($this->wire->config->paths->sessions);
+
+        $results[] = array(
+            'title'  => $this->_('Root Folder'),
+            'value'  => ($root_ok) ? $this->_('Only readable') : $this->_('Writable!'),
+            'status' => ($root_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user'),
+        );
+
+        $results[] = array(
+            'title'  => $this->_('Admin Folder'),
+            'value'  => ($admin_ok) ? $this->_('Only readable') : $this->_('Writable!'),
+            'status' => ($admin_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user'),
+        );
+
+        $results[] = array(
+            'title'  => $this->_('Assets Folder'),
+            'value'  => ($assets_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'status' => ($assets_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+        );
+
+        $results[] = array(
+            'title'  => $this->_('Cache Folder'),
+            'value'  => ($cache_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'status' => ($cache_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+        );
+
+        $results[] = array(
+            'title'  => $this->_('Session Folder'),
+            'value'  => ($sessions_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'status' => ($sessions_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+        );
+
+
+        return $results;
+    }
+
+
+
+    /**
+     * To extend the collected information, just add a new method call to the list of arrays in this array merge.
+     * Each method must return an array of results (numerically keyed) and each result will be an array with four string
+     * keys... 'title', 'value', 'status' and 'action'.
+     */
+    protected function collectDiagnostics()
+    {
+        $results = array_merge_recursive(
+            $this->getPHPDiagnostics(),
+            $this->getWebserverDiagnostics(),
+            $this->getFilesystemDiagnostics(),
+            $this->getTimeDiagnostics()
+        );
+
+        return $results;
+    }
+
+
+    public function ___execute()
+    {
+        $this->setFuel('processHeadline', $this->_('System Diagnostics'));
+
+        $description = "<p class='description'>". $this->_("Results of scanning your system...") . "</p>";
+
+        $results = $this->collectDiagnostics();
+
+        $table = $this->modules->get("MarkupAdminDataTable");
+        $table->setEncodeEntities(false);
+        $table->headerRow(array($this->_('Attribute'), $this->_('Value'), $this->_('Status'), $this->_('Remedial Actions / Notes')));
+
+        foreach ($results as $k => $row) {
+            $table->row(array(
+                $row['title'],
+                $row['value'],
+                $row['status'],
+                $row['action'],
+            ));
+        }
+
+
+        return $description . $table->render();
+    }
+
+
+    public function ___install()
+    {
+        parent::install();
+
+        $p = new Page();
+        $p->template = $this->templates->get("admin");
+        $p->parent = $this->pages->get("template=admin, name=setup");
+        $p->title = $this->_('Diagnostics');
+        $p->name  = __CLASS__;
+        $p->process = $this;
+        $p->save();
+    }
+
+
+    public function ___uninstall()
+    {
+        $p = $this->pages->get('template=admin, name=' . __CLASS__);
+        $p->delete();
+    }
+}
+
+// eof
