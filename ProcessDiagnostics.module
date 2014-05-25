@@ -132,35 +132,35 @@ class ProcessDiagnostics extends Process
             'title'  => $this->_('Root Folder'),
             'value'  => ($root_ok) ? $this->_('Only readable') : $this->_('Writable!'),
             'status' => ($root_ok) ? $this->_('Ok') : $this->_('Fail'),
-            'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user'),
+            'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Admin Folder'),
             'value'  => ($admin_ok) ? $this->_('Only readable') : $this->_('Writable!'),
             'status' => ($admin_ok) ? $this->_('Ok') : $this->_('Fail'),
-            'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user'),
+            'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Assets Folder'),
             'value'  => ($assets_ok) ? $this->_('Writable') : $this->_('Not writable'),
             'status' => ($assets_ok) ? $this->_('Ok') : $this->_('Fail'),
-            'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+            'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Cache Folder'),
             'value'  => ($cache_ok) ? $this->_('Writable') : $this->_('Not writable'),
             'status' => ($cache_ok) ? $this->_('Ok') : $this->_('Fail'),
-            'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+            'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Session Folder'),
             'value'  => ($sessions_ok) ? $this->_('Writable') : $this->_('Not writable'),
             'status' => ($sessions_ok) ? $this->_('Ok') : $this->_('Fail'),
-            'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user'),
+            'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
 
