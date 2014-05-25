@@ -8,6 +8,8 @@
 class ProcessDiagnostics extends Process
 {
     protected static $ok;
+    protected static $fail;
+    protected static $warn;
 
     public static function getModuleInfo()
     {
