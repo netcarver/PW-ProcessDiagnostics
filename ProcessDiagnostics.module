@@ -14,7 +14,7 @@ class ProcessDiagnostics extends Process
         return array(
             'title'     => __('Diagnostics Page', __FILE__),
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
-            'version'   => 1,
+            'version'   => 3,
             'permanent' => false,
             'autoload'  => true,
             'singular'  => true,
@@ -36,7 +36,7 @@ class ProcessDiagnostics extends Process
 
         $this->is_apache = (($this->server_software && stristr($this->server_software, 'apache')) || is_callable('apache_get_version'));
 
-        self::$ok = $this->_('Ok');
+        self::$ok = $this->_('OK');
     }
 
 
