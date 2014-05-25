@@ -36,7 +36,9 @@ class ProcessDiagnostics extends Process
 
         $this->is_apache = (($this->server_software && stristr($this->server_software, 'apache')) || is_callable('apache_get_version'));
 
-        self::$ok = $this->_('OK');
+        self::$ok   = $this->_('OK');
+        self::$fail = $this->_('Failure');
+        self::$warn = $this->_('Warning');
     }
 
 
