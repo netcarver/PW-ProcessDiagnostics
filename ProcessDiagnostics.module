@@ -136,6 +136,8 @@ class ProcessDiagnostics extends Process
             } else {
                 $out[] = $this->_('is not writable');
             }
+
+            $out[] = substr(sprintf('%o', $info['perms']), -4);
         } else {
             $out[] = $this->_('Does not exist.');
         }
