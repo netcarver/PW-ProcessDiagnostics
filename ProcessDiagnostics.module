@@ -84,6 +84,67 @@ class ProcessDiagnostics extends Process
 
 
     /**
+     * Reads basic FS parameters for the given file or directory.
+     */
+    protected function getFileSystemAttribs($name, $pathspec)
+    {
+        $fs_info = array(
+            'name'   => $name,
+            'path'   => $pathspec,
+            'exists' => file_exists($pathspec),
+            'isfile' => false,
+            'islink' => false,
+            'isdir'  => false,
+            'read'   => false,
+            'write'  => false,
+            'exec'   => false,
+            'perms'  => false,
+        );
+
+        if ($fs_info['exists']) {
+            $fs_info['isfile'] = is_file($pathspec);
+            $fs_info['islink'] = is_link($pathspec);
+            $fs_info['isdir']  = is_dir($pathspec);
+            $fs_info['read']   = is_readable($pathspec);
+            $fs_info['write']  = is_writable($pathspec);
+            $fs_info['exec']   = is_executable($pathspec);
+            $fs_info['perms']  = fileperms($pathspec);
+        }
+
+        return $fs_info;
+    }
+
+
+    /**
+     * Creates a text description from the given file information.
+     */
+    public function describeFSInfo($info)
+    {
+        $out = array();
+
+        if ($info['exists']) {
+            $out[] = $this->_('Exists');
+
+            if ($info['read']) {
+                $out[] = $this->_('is readable');
+            } else {
+                $out[] = $this->_('is not readable');
+            }
+
+            if ($info['write']) {
+                $out[] = $this->_('is writable');
+            } else {
+                $out[] = $this->_('is not writable');
+            }
+        } else {
+            $out[] = $this->_('Does not exist.');
+        }
+
+        return implode(', ', $out);
+    }
+
+
+    /**
      * Returns a diagnostic array about the webserver.
      *
      * For Apache, this also checks if the .htaccess file is in the right place and is readable by the webserver.
@@ -110,15 +171,29 @@ class ProcessDiagnostics extends Process
                 );
             }
 
-            $htaccess_ok  = is_readable($this->wire->config->paths->root . '/.htaccess');
-            $htaccess_txt = is_readable($this->wire->config->paths->root . '/htaccess.txt');
+            $ht_info = $this->getFileSystemAttribs('.htaccess', $this->wire->config->paths->root.'/.htaccess');
+            $httext_info = $this->getFileSystemAttribs('htaccess.txt', $this->wire->config->paths->root.'/htaccess.txt');
 
+            $htaccess_ok  = ($ht_info['exists'] && $ht_info['read'] && !$ht_info['write']);
+            $ht_mv_needed = $httext_info['exists'] && !$ht_info['exists'];
+
+            // Diagnostics for the htaccess.txt file...
+            $results[] = array(
+                'title'  => 'htaccess.txt',
+                'value'  => $this->describeFSInfo($httext_info),
+                'status' => ($ht_mv_needed || $httext_info['exists']) ? $this->_('Fail') : self::$ok,
+                'action' => $ht_mv_needed ? 'Rename htaccess.txt to .htaccess' : $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
+            );
+
+            // Diagnostics for the .htaccess file...
             $results[] = array(
                 'title'  => $this->_('.htaccess file'),
-                'value'  => $htaccess_ok ? '' : $this->_('Cannot be read.'),
+                'value'  => $this->describeFSInfo($ht_info),
                 'status' => $htaccess_ok ? self::$ok : $this->_('Fail'),
-                'action' => $htaccess_ok ? $this->_('Present and readable.') : ($htaccess_txt ? $this->_('Rename htaccess.txt to .htaccess and make sure it is readable by the webserver user.') : $this->_('Make sure .htaccess is readable by the webserver user.')),
+                'action' => $htaccess_ok ? '' : $this->_('.htaccess must exist, must be readable, must <strong>not</strong> be writable.'),
             );
+
+
         }
 
         return $results;
@@ -131,43 +206,50 @@ class ProcessDiagnostics extends Process
      */
     protected function getFilesystemDiagnostics()
     {
-        $root_ok     = !is_writable($this->wire->config->paths->root)      && is_readable($this->wire->config->paths->root);
-        $admin_ok    = !is_writable($this->wire->config->paths->admin)     && is_readable($this->wire->config->paths->admin);
-        $assets_ok   =  is_writable($this->wire->config->paths->assets);
-        $cache_ok    =  is_writable($this->wire->config->paths->cache);
-        $sessions_ok =  is_writable($this->wire->config->paths->sessions);
+
+        $root_info   = $this->getFileSystemAttribs($this->_('Root directory'),    $this->wire->config->paths->root);
+        //$admin_info  = $this->getFileSystemAttribs($this->_('Admin directory'),   $this->wire->config->paths->admin);
+        $asset_info  = $this->getFileSystemAttribs($this->_('Assets directory'),  $this->wire->config->paths->assets);
+        $cache_info  = $this->getFileSystemAttribs($this->_('Cache directory'),   $this->wire->config->paths->cache);
+        $sess_info   = $this->getFileSystemAttribs($this->_('Session directory'), $this->wire->config->paths->sessions);
+
+        $root_ok     =  $root_info['exists']  &&  $root_info['read']  && !$root_info['write'];
+        //$admin_ok    =  $admin_info['exists'] &&  $admin_info['read'] && !$admin_info['write'];
+        $assets_ok   =  $asset_info['exists'] &&  $asset_info['read'] &&  $asset_info['write'];
+        $cache_ok    =  $cache_info['exists'] &&  $cache_info['read'] &&  $cache_info['write'];
+        $sessions_ok =  $sess_info['exists']  &&  $sess_info['read']  &&  $sess_info['write'];
 
         $results[] = array(
-            'title'  => $this->_('Root Folder'),
-            'value'  => ($root_ok) ? $this->_('Only readable') : $this->_('Writable!'),
+            'title'  => $root_info['name'],
+            'value'  => $this->describeFSInfo($root_info),
             'status' => ($root_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
-        $results[] = array(
-            'title'  => $this->_('Admin Folder'),
-            'value'  => ($admin_ok) ? $this->_('Only readable') : $this->_('Writable!'),
-            'status' => ($admin_ok) ? self::$ok : $this->_('Fail'),
-            'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
-        );
+        //$results[] = array(
+        //    'title'  => $admin_info['name'],
+        //    'value'  => $this->describeFSInfo($admin_info),
+        //    'status' => ($admin_ok) ? self::$ok : $this->_('Fail'),
+        //    'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
+        //);
 
         $results[] = array(
-            'title'  => $this->_('Assets Folder'),
-            'value'  => ($assets_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'title'  => $asset_info['name'],
+            'value'  => $this->describeFSInfo($asset_info),
             'status' => ($assets_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
-            'title'  => $this->_('Cache Folder'),
-            'value'  => ($cache_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'title'  => $cache_info['name'],
+            'value'  => $this->describeFSInfo($cache_info),
             'status' => ($cache_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
-            'title'  => $this->_('Session Folder'),
-            'value'  => ($sessions_ok) ? $this->_('Writable') : $this->_('Not writable'),
+            'title'  => $sess_info['name'],
+            'value'  => $this->describeFSInfo($sess_info),
             'status' => ($sessions_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
