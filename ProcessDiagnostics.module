@@ -56,7 +56,7 @@ class ProcessDiagnostics extends Process
         $status = self::$ok;
         $action = '';
         if (version_compare(PHP_VERSION, $fail_limit) < 0) {
-            $status = $this->_('Fail');
+            $status = self::$fail;
             $action = $this->_("Upgrade your PHP installation to at least version ").$fail_limit;
         }
 
@@ -172,7 +172,7 @@ class ProcessDiagnostics extends Process
                 $results[] = array(
                     'title'  => $this->_('Apache mod_rewrite'),
                     'value'  => $rewrite_ok ? $this->_('Installed') : $this->_('Not installed'),
-                    'status' => $rewrite_ok ? self::$ok : $this->_('Fail'),
+                    'status' => $rewrite_ok ? self::$ok : self::$fail,
                     'action' => $rewrite_ok ? '' : $this->_('Install mod_rewrite, it\'s currently not available to Apache.'),
                 );
             }
@@ -187,7 +187,7 @@ class ProcessDiagnostics extends Process
             $results[] = array(
                 'title'  => 'htaccess.txt',
                 'value'  => $this->describeFSInfo($httext_info),
-                'status' => ($ht_mv_needed || $httext_info['exists']) ? $this->_('Fail') : self::$ok,
+                'status' => ($ht_mv_needed || $httext_info['exists']) ? self::$fail : self::$ok,
                 'action' => $ht_mv_needed ? 'Rename htaccess.txt to .htaccess' : $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
             );
 
@@ -195,7 +195,7 @@ class ProcessDiagnostics extends Process
             $results[] = array(
                 'title'  => $this->_('.htaccess file'),
                 'value'  => $this->describeFSInfo($ht_info),
-                'status' => $htaccess_ok ? self::$ok : $this->_('Fail'),
+                'status' => $htaccess_ok ? self::$ok : self::$fail,
                 'action' => $htaccess_ok ? '' : $this->_('.htaccess must exist, must be readable, must <strong>not</strong> be writable.'),
             );
 
@@ -228,7 +228,7 @@ class ProcessDiagnostics extends Process
         $results[] = array(
             'title'  => $root_info['name'],
             'value'  => $this->describeFSInfo($root_info),
-            'status' => ($root_ok) ? self::$ok : $this->_('Fail'),
+            'status' => ($root_ok) ? self::$ok : self::$fail,
             'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
@@ -242,21 +242,21 @@ class ProcessDiagnostics extends Process
         $results[] = array(
             'title'  => $asset_info['name'],
             'value'  => $this->describeFSInfo($asset_info),
-            'status' => ($assets_ok) ? self::$ok : $this->_('Fail'),
+            'status' => ($assets_ok) ? self::$ok : self::$fail,
             'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $cache_info['name'],
             'value'  => $this->describeFSInfo($cache_info),
-            'status' => ($cache_ok) ? self::$ok : $this->_('Fail'),
+            'status' => ($cache_ok) ? self::$ok : self::$fail,
             'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $sess_info['name'],
             'value'  => $this->describeFSInfo($sess_info),
-            'status' => ($sessions_ok) ? self::$ok : $this->_('Fail'),
+            'status' => ($sessions_ok) ? self::$ok : self::$fail,
             'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
@@ -297,10 +297,22 @@ class ProcessDiagnostics extends Process
         $table->headerRow(array($this->_('Attribute'), $this->_('Value'), $this->_('Status'), $this->_('Remedial Actions / Notes')));
 
         foreach ($results as $k => $row) {
+            $class = 'ok';
+            switch ($row['status']) {
+                case self::$fail :
+                    $class = 'failure';
+                    break;
+                case self::$warn :
+                    $class = 'warning';
+                    break;
+                default :
+                    $class = 'ok';
+            }
+
             $table->row(array(
                 $row['title'],
                 $row['value'],
-                (self::$ok === $row['status']) ? '<div class="status">' . $row['status'] . '</div>' : '<div class="status fail">' . $row['status'] . '</div>',
+                '<div class="status '.$class.'">' . $row['status'] . '</div>',
                 $row['action'],
             ));
         }

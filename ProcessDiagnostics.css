@@ -1,5 +1,11 @@
-.fail {
+.failure {
     background-color: #C33;
+    color: #fff;
+    font-weight: bold;
+}
+
+.warning {
+    background-color: #F93;
     color: #fff;
     font-weight: bold;
 }
