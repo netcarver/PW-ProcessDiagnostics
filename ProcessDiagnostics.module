@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * A simple diagnostics module for ProcessWire.
+ *
+ * Inspired by the diagnostics tab in Textpattern.
+ *
+ *
+ * TODO make the collection of diagnostics hookable so other modules can hook the diagnostic collection calls and add
+ * their own results to the table.
+ */
 class ProcessDiagnostics extends Process
 {
     public static function getModuleInfo()
