@@ -1,3 +1,53 @@
+.DiagnosticsTable {
+    width: 100%;
+}
+
+table.DiagnosticsTable th,
+table.DiagnosticsTable td,
+ul.DiagnosticsTable li {
+    border-bottom: 1px dotted #ccc;
+    vertical-align: top;
+    padding: 3px 5px 3px 0;
+    margin: 0;
+}
+
+table.DiagnosticsTable th {
+    font-weight: bold;
+    color: #777;
+    text-transform: uppercase;
+    font-size: 0.833333em;
+    cursor: pointer;
+}
+    table.AdminDataTableSortable th:hover {
+        text-decoration: underline;
+    }
+    table.DiagnosticsTable th.headerSortDown,
+    table.DiagnosticsTable th.headerSortUp {
+        color: #000;
+    }
+
+table.DiagnosticsTable th.actions,
+table.DiagnosticsTable td.actions {
+    text-align: right;
+}
+
+ul.DiagnosticsTable li {
+    display: block;
+}
+
+.DiagnosticsTable a {
+    border: none;
+}
+
+table.DiagnosticsTable tr td:first-child a {
+    font-weight: bold;
+}
+
+table.DiagnosticsTable caption {
+    font-size: 1.4em;
+}
+
+
 .failure {
     background-color: #C33;
     color: #fff;
@@ -10,6 +60,22 @@
     font-weight: bold;
 }
 
-td div.status {
+td.status, th.status {
     text-align: center;
+}
+
+th.title {
+    width: 20%;
+}
+
+th.value {
+    width: 27%;
+}
+
+th.status {
+    width: 8%;
+}
+
+th.action {
+    width: 44%;
 }
