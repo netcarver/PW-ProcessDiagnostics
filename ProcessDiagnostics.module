@@ -4,10 +4,6 @@
  * A simple diagnostics module for ProcessWire.
  *
  * Inspired by the diagnostics tab in Textpattern.
- *
- *
- * TODO make the collection of diagnostics hookable so other modules can hook the diagnostic collection calls and add
- * their own results to the table.
  */
 class ProcessDiagnostics extends Process
 {
@@ -187,7 +183,7 @@ class ProcessDiagnostics extends Process
      * Each method must return an array of results (numerically keyed) and each result will be an array with four string
      * keys... 'title', 'value', 'status' and 'action'.
      */
-    protected function collectDiagnostics()
+    public function ___collectDiagnostics()
     {
         $results = array_merge_recursive(
             $this->getPHPDiagnostics(),
