@@ -89,6 +89,18 @@ class ProcessDiagnostics extends Process
         );
 
         if ($this->is_apache) {
+            if (is_callable('apache_get_modules')) {
+                $apache_modules = apache_get_modules();
+
+                $rewrite_ok = in_array('mod_rewrite', $apache_modules);
+                $results[] = array(
+                    'title'  => $this->_('Apache mod_rewrite'),
+                    'value'  => $rewrite_ok ? $this->_('Installed') : $this->_('Not installed'),
+                    'status' => $rewrite_ok ? $this->_('Ok') : $this->_('Fail'),
+                    'action' => $rewrite_ok ? '' : $this->_('Install mod_rewrite, it\'s currently not available to Apache.'),
+                );
+            }
+
             $htaccess_ok  = is_readable($this->wire->config->paths->root . '/.htaccess');
             $htaccess_txt = is_readable($this->wire->config->paths->root . '/htaccess.txt');
 
