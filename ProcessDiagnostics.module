@@ -11,6 +11,8 @@
  */
 class ProcessDiagnostics extends Process
 {
+    protected static $ok;
+
     public static function getModuleInfo()
     {
         return array(
@@ -37,6 +39,8 @@ class ProcessDiagnostics extends Process
         }
 
         $this->is_apache = (($this->server_software && stristr($this->server_software, 'apache')) || is_callable('apache_get_version'));
+
+        self::$ok = $this->_('Ok');
     }
 
 
@@ -49,7 +53,7 @@ class ProcessDiagnostics extends Process
     {
         $fail_limit = '5.3.8';
 
-        $status = $this->_('Ok');
+        $status = self::$ok;
         $action = '';
         if (version_compare(PHP_VERSION, $fail_limit) < 0) {
             $status = $this->_('Fail');
@@ -75,7 +79,7 @@ class ProcessDiagnostics extends Process
         $results[] = array(
             'title'  => $this->_('Timezone'),
             'value'  => $this->wire->config->timezone,
-            'status' => $this->_('Ok'),
+            'status' => self::$ok,
             'action' => '',
         );
 
@@ -93,7 +97,7 @@ class ProcessDiagnostics extends Process
         $results[] = array(
             'title'  => $this->_('Webserver'),
             'value'  => $this->server_software,
-            'status' => $this->_('Ok'),
+            'status' => self::$ok,
             'action' => '',
         );
 
@@ -105,7 +109,7 @@ class ProcessDiagnostics extends Process
                 $results[] = array(
                     'title'  => $this->_('Apache mod_rewrite'),
                     'value'  => $rewrite_ok ? $this->_('Installed') : $this->_('Not installed'),
-                    'status' => $rewrite_ok ? $this->_('Ok') : $this->_('Fail'),
+                    'status' => $rewrite_ok ? self::$ok : $this->_('Fail'),
                     'action' => $rewrite_ok ? '' : $this->_('Install mod_rewrite, it\'s currently not available to Apache.'),
                 );
             }
@@ -116,7 +120,7 @@ class ProcessDiagnostics extends Process
             $results[] = array(
                 'title'  => $this->_('.htaccess file'),
                 'value'  => $htaccess_ok ? '' : $this->_('Cannot be read.'),
-                'status' => $htaccess_ok ? $this->_('Ok') : $this->_('Fail'),
+                'status' => $htaccess_ok ? self::$ok : $this->_('Fail'),
                 'action' => $htaccess_ok ? $this->_('Present and readable.') : ($htaccess_txt ? $this->_('Rename htaccess.txt to .htaccess and make sure it is readable by the webserver user.') : $this->_('Make sure .htaccess is readable by the webserver user.')),
             );
         }
@@ -140,35 +144,35 @@ class ProcessDiagnostics extends Process
         $results[] = array(
             'title'  => $this->_('Root Folder'),
             'value'  => ($root_ok) ? $this->_('Only readable') : $this->_('Writable!'),
-            'status' => ($root_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'status' => ($root_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Admin Folder'),
             'value'  => ($admin_ok) ? $this->_('Only readable') : $this->_('Writable!'),
-            'status' => ($admin_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'status' => ($admin_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Assets Folder'),
             'value'  => ($assets_ok) ? $this->_('Writable') : $this->_('Not writable'),
-            'status' => ($assets_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'status' => ($assets_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Cache Folder'),
             'value'  => ($cache_ok) ? $this->_('Writable') : $this->_('Not writable'),
-            'status' => ($cache_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'status' => ($cache_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
         $results[] = array(
             'title'  => $this->_('Session Folder'),
             'value'  => ($sessions_ok) ? $this->_('Writable') : $this->_('Not writable'),
-            'status' => ($sessions_ok) ? $this->_('Ok') : $this->_('Fail'),
+            'status' => ($sessions_ok) ? self::$ok : $this->_('Fail'),
             'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
         );
 
@@ -212,7 +216,7 @@ class ProcessDiagnostics extends Process
             $table->row(array(
                 $row['title'],
                 $row['value'],
-                $row['status'],
+                (self::$ok === $row['status']) ? '<div class="status">' . $row['status'] . '</div>' : '<div class="status fail">' . $row['status'] . '</div>',
                 $row['action'],
             ));
         }
