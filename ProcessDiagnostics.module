@@ -184,14 +184,16 @@ class ProcessDiagnostics extends Process
             $htaccess_ok  = ($ht_info['exists'] && $ht_info['read'] && !$ht_info['write']);
             $ht_mv_needed = $httext_info['exists'] && !$ht_info['exists'];
 
-            // Diagnostics for the htaccess.txt file...
-            $results[] = array(
-                'title'  => 'htaccess.txt',
-                'value'  => $this->describeFSInfo($httext_info),
-                'status' => ($ht_mv_needed || $httext_info['exists']) ? self::$fail : self::$ok,
-                'action' => $ht_mv_needed ? $this->_('Rename htaccess.txt to .htaccess') :
-                                            $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
-            );
+            if ($httext_info['exists']) {
+                // Diagnostics for the htaccess.txt file...
+                $results[] = array(
+                    'title'  => 'htaccess.txt',
+                    'value'  => $this->describeFSInfo($httext_info),
+                    'status' => ($ht_mv_needed || $httext_info['exists']) ? self::$fail : self::$ok,
+                    'action' => $ht_mv_needed ? $this->_('Rename htaccess.txt to .htaccess') :
+                    $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
+                    );
+            }
 
             // Diagnostics for the .htaccess file...
             $results[] = array(
