@@ -16,7 +16,7 @@ class ProcessDiagnostics extends Process
         return array(
             'title'     => __('Diagnostics Page', __FILE__),
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
-            'version'   => 3,
+            'version'   => 4,
             'permanent' => false,
             'autoload'  => true,
             'singular'  => true,
@@ -171,7 +171,8 @@ class ProcessDiagnostics extends Process
                 $rewrite_ok = in_array('mod_rewrite', $apache_modules);
                 $results[] = array(
                     'title'  => $this->_('Apache mod_rewrite'),
-                    'value'  => $rewrite_ok ? $this->_('Installed') : $this->_('Not installed'),
+                    'value'  => $rewrite_ok ? $this->_('Installed') :
+                                              $this->_('Not installed'),
                     'status' => $rewrite_ok ? self::$ok : self::$fail,
                     'action' => $rewrite_ok ? '' : $this->_('Install mod_rewrite, it\'s currently not available to Apache.'),
                 );
@@ -188,7 +189,8 @@ class ProcessDiagnostics extends Process
                 'title'  => 'htaccess.txt',
                 'value'  => $this->describeFSInfo($httext_info),
                 'status' => ($ht_mv_needed || $httext_info['exists']) ? self::$fail : self::$ok,
-                'action' => $ht_mv_needed ? 'Rename htaccess.txt to .htaccess' : $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
+                'action' => $ht_mv_needed ? $this->_('Rename htaccess.txt to .htaccess') :
+                                            $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
             );
 
             // Diagnostics for the .htaccess file...
@@ -198,8 +200,6 @@ class ProcessDiagnostics extends Process
                 'status' => $htaccess_ok ? self::$ok : self::$fail,
                 'action' => $htaccess_ok ? '' : $this->_('.htaccess must exist, must be readable, must <strong>not</strong> be writable.'),
             );
-
-
         }
 
         return $results;
@@ -214,13 +214,11 @@ class ProcessDiagnostics extends Process
     {
 
         $root_info   = $this->getFileSystemAttribs($this->_('Root directory'),    $this->wire->config->paths->root);
-        //$admin_info  = $this->getFileSystemAttribs($this->_('Admin directory'),   $this->wire->config->paths->admin);
         $asset_info  = $this->getFileSystemAttribs($this->_('Assets directory'),  $this->wire->config->paths->assets);
         $cache_info  = $this->getFileSystemAttribs($this->_('Cache directory'),   $this->wire->config->paths->cache);
         $sess_info   = $this->getFileSystemAttribs($this->_('Session directory'), $this->wire->config->paths->sessions);
 
         $root_ok     =  $root_info['exists']  &&  $root_info['read']  && !$root_info['write'];
-        //$admin_ok    =  $admin_info['exists'] &&  $admin_info['read'] && !$admin_info['write'];
         $assets_ok   =  $asset_info['exists'] &&  $asset_info['read'] &&  $asset_info['write'];
         $cache_ok    =  $cache_info['exists'] &&  $cache_info['read'] &&  $cache_info['write'];
         $sessions_ok =  $sess_info['exists']  &&  $sess_info['read']  &&  $sess_info['write'];
@@ -231,13 +229,6 @@ class ProcessDiagnostics extends Process
             'status' => ($root_ok) ? self::$ok : self::$fail,
             'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
         );
-
-        //$results[] = array(
-        //    'title'  => $admin_info['name'],
-        //    'value'  => $this->describeFSInfo($admin_info),
-        //    'status' => ($admin_ok) ? self::$ok : $this->_('Fail'),
-        //    'action' => ($admin_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
-        //);
 
         $results[] = array(
             'title'  => $asset_info['name'],
@@ -294,7 +285,12 @@ class ProcessDiagnostics extends Process
 
         $table = $this->modules->get("MarkupAdminDataTable");
         $table->setEncodeEntities(false);
-        $table->headerRow(array($this->_('Attribute'), $this->_('Value'), $this->_('Status'), $this->_('Remedial Actions / Notes')));
+        $table->headerRow(array(
+            $this->_('Attribute'),
+            $this->_('Value'),
+            $this->_('Status'),
+            $this->_('Notes / Remedial Actions')
+        ));
 
         foreach ($results as $k => $row) {
             $class = 'ok';
