@@ -1,0 +1,9 @@
+.fail {
+    background-color: #C33;
+    color: #fff;
+    font-weight: bold;
+}
+
+td div.status {
+    text-align: center;
+}
