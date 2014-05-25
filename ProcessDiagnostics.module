@@ -47,7 +47,7 @@ class ProcessDiagnostics extends Process
      */
     protected function getPHPDiagnostics()
     {
-        $fail_limit = '5.3.0';
+        $fail_limit = '5.3.8';
 
         $status = $this->_('Ok');
         $action = '';
