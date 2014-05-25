@@ -335,7 +335,9 @@ class ProcessDiagnostics extends Process
     public function ___uninstall()
     {
         $p = $this->pages->get('template=admin, name=' . __CLASS__);
-        $p->delete();
+        if ($p->id > 0) {
+            $p->delete();
+        }
     }
 }
 
