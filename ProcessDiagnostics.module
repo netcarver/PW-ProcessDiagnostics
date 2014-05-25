@@ -320,8 +320,6 @@ class ProcessDiagnostics extends Process
 
     public function ___install()
     {
-        parent::install();
-
         $p = new Page();
         $p->template = $this->templates->get("admin");
         $p->parent = $this->pages->get("template=admin, name=setup");
