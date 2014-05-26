@@ -15,7 +15,7 @@ class ExamineImagehandling extends Process
             'autoload'  => true,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
-            'author'    => 'Stephen Dickinson, QBox',
+            'author'    => 'Horst',
         );
     }
 
