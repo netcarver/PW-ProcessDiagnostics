@@ -48,7 +48,7 @@ class ProcessDiagnostics extends Process
         self::$fail = $this->_('Failure');
         self::$warn = $this->_('Warning');
 
-        self::$verbosity = self::HIGH_VERBOSITY;
+        self::$verbosity = self::MEDIUM_VERBOSITY;
     }
 
 
