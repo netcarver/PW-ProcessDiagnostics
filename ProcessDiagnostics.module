@@ -374,10 +374,10 @@ class ProcessDiagnostics extends Process
     public function ___collectDiagnostics()
     {
         $results = array(
-            $this->_('PHP Diagnostics...')            => $this->getPHPDiagnostics(),
-            $this->_('Webserver Diagnostics...')      => $this->getWebserverDiagnostics(),
-            $this->_('Filesystem Diagnostics...')     => $this->getFilesystemDiagnostics(),
-            $this->_('Date/Time Diagnostics...')      => $this->getTimeDiagnostics()
+            $this->_('PHP Diagnostics')            => $this->getPHPDiagnostics(),
+            $this->_('Webserver Diagnostics')      => $this->getWebserverDiagnostics(),
+            $this->_('Filesystem Diagnostics')     => $this->getFilesystemDiagnostics(),
+            $this->_('Date/Time Diagnostics')      => $this->getTimeDiagnostics()
         );
 
         return $results;
