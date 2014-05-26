@@ -96,7 +96,7 @@ class ProcessDiagnostics extends Process
 
         // build results array PHP Handler
         $results[] = array(
-            'title'  => $this->_('PHP Handler'),
+            'title'  => $this->_('Handler'),
             'value'  => $api,
             'status' => self::$ok,
             'action' => '',
