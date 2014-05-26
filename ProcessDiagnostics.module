@@ -349,6 +349,15 @@ class ProcessDiagnostics extends Process
     }
 
 
+    /**
+     * Capitialise the initial character of the given string.
+     */
+    public function initCap($string)
+    {
+        return strtoupper($string[0]) . substr($string, 1);
+    }
+
+
     protected function getImagesDiagnostics()
     {
         if(!function_exists('gd_info')) {
@@ -369,7 +378,7 @@ class ProcessDiagnostics extends Process
             // GD version
             $results[] = array(
                 'title'  => $this->_('GD library'),
-                'value'  => $ver,
+                'value'  => $this->initCap($ver),
                 'status' => self::$ok,
                 'action' => ''
             );
@@ -379,7 +388,7 @@ class ProcessDiagnostics extends Process
                 if(version_compare($this->config->version, '2.4.1', '<')) {
                     $results[] = array(
                         'title'  => $this->_('GD library Bug'),
-                        'value'  => 'possible bug in GD-Version',
+                        'value'  => $this->_('Possible bug in GD-Version'),
                         'status' => self::$warn,  // @steve: or better use self::fail ?
                         'action' => $this->_('Bundled GD libraries in PHP versions 5.5.9 and 5.5.10 are known as buggy. You should update A) your PHP version to 5.5.11 or newer, or B) the ProcessWire version to 2.4.2 or newer')
                     );
@@ -390,8 +399,8 @@ class ProcessDiagnostics extends Process
             foreach(array('JPG', 'PNG', 'GIF', 'FreeType') as $v) {
                 $name = $this->_(sprintf('GD %s Support', $v));
                 $v = strtolower($v);
-                $value = $$v ? $this->_('supported') :
-                                $this->_('not supported');
+                $value = $$v ? $this->_('Supported') :
+                                $this->_('Not supported');
                 $status = $$v ? self::$ok : self::$fail;
                 $results[] = array(
                     'title'  => $name,
@@ -409,8 +418,8 @@ class ProcessDiagnostics extends Process
         $action = $res ? '' : $this->_("Not needed for PW core, might be needed by third party modules.");
         $results[] = array(
             'title'  => $this->_('Exif read data'),
-            'value'  => $res ? $this->_('available') :
-                               $this->_('not available'),
+            'value'  => $res ? $this->_('Available') :
+                               $this->_('Not available'),
             'status' => $res ? self::$ok : self::$warn,
             'action' => $action
         );
@@ -421,7 +430,7 @@ class ProcessDiagnostics extends Process
         if(!class_exists('Imagick')) {
             $results[] = array(
                 'title'  => $this->_('Imagick Extension'),
-                'value'  => 'not available',
+                'value'  => $this->_('Not available'),
                 'status' => self::$warn,
                 'action' => $this->_('Not needed for PW core, might be needed by third party modules.')
             );
@@ -429,14 +438,14 @@ class ProcessDiagnostics extends Process
             if(self::isDisabled('phpinfo')) {
                 $results[] = array(
                     'title'  => $this->_('Imagick Extension'),
-                    'value'  => 'is available',
+                    'value'  => $this->_('Available'),
                     'status' => self::$warn,
                     'action' => $this->_('Odd, retrieving phpinfo on your server is disabled! We cannot get further informations here.')
                 );
             } else {
                 $results[] = array(
                     'title'  => $this->_('Imagick Extension'),
-                    'value'  => 'available',
+                    'value'  => $this->_('Available'),
                     'status' => self::$ok,
                     'action' => ''
                 );
