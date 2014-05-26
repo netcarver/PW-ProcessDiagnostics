@@ -12,7 +12,7 @@ class ExamineWebserver extends Process
             'summary'   => __('Allows collection of webserver diagnostics', __FILE__),
             'version'   => 1,
             'permanent' => false,
-            'autoload'  => true,
+            'autoload'  => false,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',

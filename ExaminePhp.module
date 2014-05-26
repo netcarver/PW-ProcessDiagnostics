@@ -13,7 +13,7 @@ class ExaminePhp extends Process
             'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
             'version'   => 1,
             'permanent' => false,
-            'autoload'  => true,
+            'autoload'  => false,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',

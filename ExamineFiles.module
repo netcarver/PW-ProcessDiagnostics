@@ -12,7 +12,7 @@ class ExamineFiles extends Process
             'summary'   => __('Allows collection of file and directory diagnostics', __FILE__),
             'version'   => 1,
             'permanent' => false,
-            'autoload'  => true,
+            'autoload'  => false,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',

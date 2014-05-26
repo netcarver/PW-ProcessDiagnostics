@@ -2,14 +2,14 @@
     background-color: #C33;
     color: #fff;
     font-weight: bold;
-    padding:5px;
+    padding:5px 7px;
 }
 
 .diagnostics-table .warning {
     background-color: #F93;
     color: #fff;
     font-weight: bold;
-    padding:5px;
+    padding:5px 7px;
 }
 
 .diagnostics-table th:first-child {

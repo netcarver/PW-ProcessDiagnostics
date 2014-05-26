@@ -12,7 +12,7 @@ class ExamineModules extends Process
             'summary'   => __('Allows collection of module version diagnostics', __FILE__),
             'version'   => 1,
             'permanent' => false,
-            'autoload'  => true,
+            'autoload'  => false,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',
@@ -20,12 +20,49 @@ class ExamineModules extends Process
         );
     }
 
+    private $defaultServiceUrl = 'http://modules.processwire.com/export-json/';
+    private $defaultServiceKey = 'pw231';
+
 
     public function init()
     {
         parent::init();
 
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
+
+        $this->config->js('DiagnosticsModules', array(
+            'updateAvailable' => $this->_("Update available"),
+            'newVersion' => $this->_("There is a new version available."),
+            'clickHere' => $this->_("Click here to go to the update page."),
+            'upToDate' => $this->_("Up to date"),
+            'warning' => $this->_("Warning")
+        ));
+
+        if($this->input->get->moduleAjax != '') {
+            echo $this->ajaxRemoteVersion($this->input->get->moduleAjax);
+            exit;
+        }
+    }
+
+
+
+    private function ajaxRemoteVersion($moduleClassName) {
+        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);
+        $localVersion = $this->formatVersion($moduleInfo['version']);
+
+        $url = trim($this->defaultServiceUrl, '/') . "/".$moduleClassName."/?apikey=" . $this->defaultServiceKey;
+
+        $http = new WireHttp();
+        $data = json_decode($http->get($url));
+
+        if($data->status != 'error') {
+            $remoteVersion = $this->formatVersion($data->module_version);
+            $version =  $remoteVersion;
+        } else {
+            $version = $localVersion;
+        }
+
+        return $version;
     }
 
 
@@ -34,11 +71,8 @@ class ExamineModules extends Process
      */
     public function GetDiagnostics()
     {
-        $defaultServiceUrl = 'http://modules.processwire.com/export-json/';
-        $defaultServiceKey = 'pw231';
-
-        $modulesRemoteVersions = (array)$this->session->get('ModulesRemoteVersions');
-
+        //$modulesRemoteVersions = (array)$this->session->get('ModulesRemoteVersions');
+        $modulesRemoteVersions = array();
 
         foreach($this->modules as $module) {
 
@@ -54,35 +88,16 @@ class ExamineModules extends Process
 
             // only show installes /site/ modules
             if($core == false) {
-                // if remote ersion is in session use this one otherwise load remote version from ... remote.
-                if(!in_array($module->className(), array_keys($modulesRemoteVersions))) {
-
-                    $url = trim($defaultServiceUrl, '/') . "/".$module->className()."/?apikey=" . $defaultServiceKey;
-
-                    $http = new WireHttp();
-                    $data = json_decode($http->get($url));
-
-                    if($data->status != 'error') {
-                        $remoteVersion = $this->formatVersion($data->module_version);
-                        $modulesRemoteVersions[$module->className()] = $remoteVersion;
-                    } else {
-                        $modulesRemoteVersions[$module->className()] = $localVersion;
-                    }
-                }
-
-
-                $updatable = ($modulesRemoteVersions[$module->className()] > $localVersion);
-                $updateUrl = $this->config->urls->admin.'module/?update='.$module->className();
 
                 $results[] = array(
                     'title'  => $moduleInfo['title'].' ('.$module->className().')',
-                    'value'  => $updatable ? $this->_('Update available') :
-                                             $this->_('Up to date'),
-                    'status' => $updatable ? ProcessDiagnostics::$warn : ProcessDiagnostics::$ok,
-                    'action' => $updatable ? sprintf($this->_('There is a new version available. <a href="%s">Click here to go to update page.</a>'), $updateUrl) : '',
+                    'value'  => '<span class="module'.$module->className().' moduleValue" data-version="'.$localVersion.'" data-module="'.$module->className().'"></span>',
+                    'status' => '<span class="module'.$module->className().' moduleStatus modulePending" data-version="'.$localVersion.'" data-module="'.$module->className().'">'.$this->_("Pending").'</span>',
+                    'action' => '<span class="module'.$module->className().' moduleAction" data-version="'.$localVersion.'" data-module="'.$module->className().'"></span>',
                 );
             }
         }
+
 
         $this->session->set('ModulesRemoteVersions', $modulesRemoteVersions);
 
@@ -92,7 +107,7 @@ class ExamineModules extends Process
 
     protected function formatVersion($version)
     {
-        return preg_replace('/(\d)(?=\d)/', '$1.', str_pad( (string)$version, 3, '0', STR_PAD_LEFT));
+        return preg_replace('/(\d)(?=\d)/', '$1.', str_pad( (string)str_replace(',', '.', $version), 3, '0', STR_PAD_LEFT));
     }
 
 

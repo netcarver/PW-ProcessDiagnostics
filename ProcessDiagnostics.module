@@ -31,7 +31,7 @@ class ProcessDiagnostics extends Process
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
             'version'   => 4,
             'permanent' => false,
-            'autoload'  => true,
+            'autoload'  => false,
             'singular'  => true,
             'author'    => 'Stephen Dickinson, QBox',
         );
@@ -54,6 +54,18 @@ class ProcessDiagnostics extends Process
         self::$not_write  = $this->_('is not writable');
 
         self::$verbosity = self::HIGH_VERBOSITY;
+
+        $this->loadExaminationModules();
+    }
+
+
+
+    private function loadExaminationModules() {
+        foreach($this->modules as $module) {
+            if (preg_match('%^Examine%Uis', $module->name)) {
+                $this->modules->get($module->name);
+            }
+        }
     }
 
 
