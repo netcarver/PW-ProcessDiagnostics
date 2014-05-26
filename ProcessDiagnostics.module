@@ -48,95 +48,9 @@ class ProcessDiagnostics extends Process
         self::$fail = $this->_('Failure');
         self::$warn = $this->_('Warning');
 
-        self::$verbosity = self::MEDIUM_VERBOSITY;
+        self::$verbosity = self::HIGH_VERBOSITY;
     }
 
-
-    /**
-     * Returns a diagnostic array about the current version of PHP and how that ties in with the version needed by PW.
-     *
-     * TODO: Have PW define it's required PHP version in the core, not just the installer.
-     */
-    protected function getPHPDiagnostics()
-    {
-        $fail_limit = '5.3.8';
-
-        $status = self::$ok;
-        $action = '';
-        if (version_compare(PHP_VERSION, $fail_limit) < 0) {
-            $status = self::$fail;
-            $action = $this->_("Upgrade your PHP installation to at least version ").$fail_limit;
-        }
-
-        $results[] = array(
-            'title'  => $this->_('Version'),
-            'value'  => PHP_VERSION,
-            'status' => $status,
-            'action' => $action,
-        );
-
-        $mem = trim(ini_get('memory_limit'));
-        $results[] = array(
-            'title'  => $this->_('Max Memory'),
-            'value'  => $mem,
-            'status' => self::$ok,
-            'action' => ''
-        );
-
-        $api     = null;   // string  full api info
-        $sys     = null;   // string  full sys info
-
-        ob_start();
-        phpinfo(INFO_GENERAL);
-        $buffer = str_replace("\r\n", "\n", ob_get_contents());
-        ob_end_clean();
-
-        $ver = phpversion();
-
-        $mem = trim(ini_get('memory_limit'));
-
-        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>Server API.*?</td><td.*?>(.*?)</td>#msi' : '#\nServer API.*?=>(.*?)\n#msi';
-        $api = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
-
-        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>System.*?</td><td.*?>(.*?)</td>#msi' : '#\nSystem.*?=>(.*?)\n#msi';
-        $sys = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
-
-
-        // build results array PHP Handler
-        $results[] = array(
-            'title'  => $this->_('Handler'),
-            'value'  => $api,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-
-        // build results array PHP system info
-        $results[] = array(
-            'title'  => $this->_('System Information'),
-            'value'  => $sys,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-        return $results;
-    }
-
-
-    /**
-     * Returns a diagnostic array about the current time settings.
-     */
-    protected function getTimeDiagnostics()
-    {
-        $results[] = array(
-            'title'  => $this->_('Timezone'),
-            'value'  => $this->wire->config->timezone,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-        return $results;
-    }
 
 
     /**
@@ -374,10 +288,8 @@ class ProcessDiagnostics extends Process
     public function ___collectDiagnostics()
     {
         $results = array(
-            $this->_('PHP Diagnostics')            => $this->getPHPDiagnostics(),
             $this->_('Webserver Diagnostics')      => $this->getWebserverDiagnostics(),
             $this->_('Filesystem Diagnostics')     => $this->getFilesystemDiagnostics(),
-            $this->_('Date/Time Diagnostics')      => $this->getTimeDiagnostics()
         );
 
         return $results;
