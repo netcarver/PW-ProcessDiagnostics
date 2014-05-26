@@ -11,6 +11,12 @@ class ProcessDiagnostics extends Process
     public static $fail;
     public static $warn;
 
+    public static $verbosity;
+
+    const LOW_VERBOSITY    = 1;
+    const MEDIUM_VERBOSITY = 2;
+    const HIGH_VERBOSITY   = 4;
+
     public static function getModuleInfo()
     {
         return array(
@@ -499,6 +505,39 @@ class ProcessDiagnostics extends Process
     }
 
 
+    /**
+     * Applies the selected verbosity to filter out unwanted diagnostic results.
+     */
+    public function filterDiagnostics(array $results)
+    {
+        if (self::HIGH_VERBOSITY === self::$verbosity) {
+            return $results;
+        }
+
+        $filtered = array();
+        foreach ($results as $caption => &$section_results) {
+            $section_filtered = array();
+            foreach ($section_results as $k => $diagnosis) {
+                $status = $diagnosis['status'];
+
+                if (
+                   ($status === self::$ok) ||
+                   ($status === self::$warn && self::LOW_VERBOSITY === self::$verbosity)
+                ) {
+                    continue;
+                }
+
+                $section_filtered[] = $diagnosis;
+            }
+
+            if (count($section_filtered)) {
+                $filtered[$caption] = $section_filtered;
+            }
+        }
+
+        return $filtered;
+    }
+
     public function ___execute()
     {
         $this->setFuel('processHeadline', $this->_('System Diagnostics'));
@@ -506,6 +545,11 @@ class ProcessDiagnostics extends Process
         $out = "<p class='description'>". $this->_("Results of scanning your system...") . "</p>";
 
         $results = $this->collectDiagnostics();
+
+        /**
+         * Apply verbosity rules to collected information...
+         */
+        $results = $this->filterDiagnostics($results);
 
         foreach ($results as $caption => $section_results) {
 
