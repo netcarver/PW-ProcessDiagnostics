@@ -61,10 +61,18 @@ class ProcessDiagnostics extends Process
         }
 
         $results[] = array(
-            'title'  => $this->_('PHP Version'),
+            'title'  => $this->_('Version'),
             'value'  => PHP_VERSION,
             'status' => $status,
             'action' => $action,
+        );
+
+        $mem = trim(ini_get('memory_limit'))
+        $results[] = array(
+            'title'  => $this->_('Max Memory'),
+            'value'  => $mem,
+            'status' => self::$ok,
+            'action' => ''
         );
 
         return $results;
