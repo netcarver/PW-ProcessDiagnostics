@@ -225,7 +225,16 @@ class ProcessDiagnostics extends Process
             $ht_info = $this->getFileSystemAttribs('.htaccess', $this->wire->config->paths->root.'/.htaccess');
             $httext_info = $this->getFileSystemAttribs('htaccess.txt', $this->wire->config->paths->root.'/htaccess.txt');
 
-            $htaccess_ok  = ($ht_info['exists'] && $ht_info['read'] && !$ht_info['write']);
+            $ht_ok        = $ht_info['exists'] && $ht_info['read'];
+            $ht_write     = $ht_info['write'];
+            $ht_status    = self::$fail;
+            if ($ht_ok) {
+                if ($ht_write) {
+                    $ht_status = self::$warn;
+                } else {
+                    $ht_status = self::$ok;
+                }
+            }
             $ht_mv_needed = $httext_info['exists'] && !$ht_info['exists'];
 
             if ($httext_info['exists']) {
@@ -243,8 +252,8 @@ class ProcessDiagnostics extends Process
             $results[] = array(
                 'title'  => $this->_('.htaccess file'),
                 'value'  => $this->describeFSInfo($ht_info),
-                'status' => $htaccess_ok ? self::$ok : self::$fail,
-                'action' => $htaccess_ok ? '' : $this->_('.htaccess must exist, must be readable, must <strong>not</strong> be writable.'),
+                'status' => $ht_status,
+                'action' => $ht_ok && !$ht_write ? '' : $this->_('.htaccess must exist, must be readable, should <strong>not</strong> be writable.'),
             );
         }
 
