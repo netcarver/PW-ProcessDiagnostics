@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional image handling related information.
  */
-class ExamineImagehandling extends Process
+class DiagnosticsImagehandling extends Process
 {
     public static function getModuleInfo()
     {
@@ -12,8 +12,7 @@ class ExamineImagehandling extends Process
             'summary'   => __('Allows collection of image handling diagnostics', __FILE__),
             'version'   => 1,
             'permanent' => false,
-            'autoload'  => true,
-            'singular'  => true,
+            'autoload'  => false,
             'requires'  => 'ProcessDiagnostics',
             'author'    => 'Horst',
         );

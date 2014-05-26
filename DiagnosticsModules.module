@@ -1,0 +1,120 @@
+<?php
+
+/**
+ * Hooks into ProcessDiagnostics to add additional module version related information.
+ */
+class DiagnosticsModules extends Process
+{
+    public static function getModuleInfo()
+    {
+        return array(
+            'title'     => __('Module version checking', __FILE__),
+            'summary'   => __('Allows collection of module version diagnostics', __FILE__),
+            'version'   => 1.2,
+            'permanent' => false,
+            'autoload'  => false,
+            'requires'  => 'ProcessDiagnostics',
+            'author'    => 'Nico Knoll',
+        );
+    }
+    
+    private $defaultServiceUrl = 'http://modules.processwire.com/export-json/';
+    private $defaultServiceKey = 'pw231';
+
+
+    public function init()
+    {
+        parent::init();
+
+        $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
+        
+        $this->config->js('DiagnosticsModules', array(
+            'updateAvailable' => $this->_("Update available"),
+            'newVersion' => $this->_("There is a new version available."),
+            'clickHere' => $this->_("Click here to go to the update page."),
+            'upToDate' => $this->_("Up to date"),
+            'warning' => $this->_("Warning")
+        ));        
+        
+        if($this->input->get->moduleAjax != '') {
+            echo $this->ajaxRemoteVersion($this->input->get->moduleAjax);
+            exit;
+        }
+    }
+    
+    
+    
+    private function ajaxRemoteVersion($moduleClassName) {
+        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);
+        $localVersion = $this->formatVersion($moduleInfo['version']);
+        
+        $url = trim($this->defaultServiceUrl, '/') . "/".$moduleClassName."/?apikey=" . $this->defaultServiceKey;
+        
+        $http = new WireHttp();
+        $data = json_decode($http->get($url));
+        
+        if($data->status != 'error') {
+            $remoteVersion = $this->formatVersion($data->module_version);
+            $version =  $remoteVersion;
+        } else {
+            $version = $localVersion;
+        }
+        
+        return $version;
+    }
+
+
+    /**
+     * Returns a diagnostic array about installed modules and looks for updates
+     */
+    public function GetDiagnostics()
+    {
+        
+
+        //$modulesRemoteVersions = (array)$this->session->get('ModulesRemoteVersions');
+        $modulesRemoteVersions = array();
+
+        foreach($this->modules as $module) {
+
+            $moduleInfo = wire('modules')->getModuleInfo($module->className());
+            $localVersion = $this->formatVersion($moduleInfo['version']);
+
+            // check if core module
+            $core = false;
+            $pathParts = explode('/', str_replace($this->config->urls->root, '', $this->config->urls->{$module->className()}), 2);
+            if($pathParts[0] == 'wire') {
+                $core = true;
+            }
+
+            // only show installes /site/ modules
+            if($core == false) {
+                
+                $results[] = array(
+                    'title'  => $moduleInfo['title'].' ('.$module->className().')',
+                    'value'  => '<span class="module'.$module->className().' moduleValue" data-version="'.$localVersion.'" data-module="'.$module->className().'"></span>',
+                    'status' => '<span class="module'.$module->className().' moduleStatus modulePending" data-version="'.$localVersion.'" data-module="'.$module->className().'">'.$this->_("Pending").'</span>',
+                    'action' => '<span class="module'.$module->className().' moduleAction" data-version="'.$localVersion.'" data-module="'.$module->className().'"></span>',
+                );
+            }
+        }
+
+        
+        $this->session->set('ModulesRemoteVersions', $modulesRemoteVersions);
+
+        return $results;
+    }
+    
+
+    protected function formatVersion($version)
+    {
+        return preg_replace('/(\d)(?=\d)/', '$1.', str_pad( (string)str_replace(',', '.', $version), 3, '0', STR_PAD_LEFT));
+    }
+
+
+    public function AppendDiagnostics($event)
+    {
+        $results = $event->return;
+        $results[$this->_('Module Version Diagnostics')] = $this->GetDiagnostics();
+        $event->return = $results;
+    }
+}

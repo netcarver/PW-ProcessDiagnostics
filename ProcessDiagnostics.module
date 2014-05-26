@@ -22,10 +22,9 @@ class ProcessDiagnostics extends Process
         return array(
             'title'     => __('Diagnostics Page', __FILE__),
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
-            'version'   => 4,
+            'version'   => 1.5,
             'permanent' => false,
-            'autoload'  => true,
-            'singular'  => true,
+            'autoload'  => false,
             'author'    => 'Stephen Dickinson, QBox',
         );
     }
@@ -49,6 +48,18 @@ class ProcessDiagnostics extends Process
         self::$warn = $this->_('Warning');
 
         self::$verbosity = self::HIGH_VERBOSITY;
+        
+        $this->loadExamines();   
+    }
+    
+    
+    
+    private function loadExamines() {
+        foreach($this->modules as $module) {
+            if (preg_match('%^Diagnostics%Uis', $module->name)) {
+                $this->modules->get($module->name);
+            }
+        }
     }
 
 
@@ -423,24 +434,29 @@ class ProcessDiagnostics extends Process
     public function ___execute()
     {
         $this->setFuel('processHeadline', $this->_('System Diagnostics'));
-        $inputfields = new InputfieldWrapper(); 
-
+        $inputfields = new InputfieldWrapper();
 
 
         $results = $this->collectDiagnostics();
+
+        /**
+         * Apply verbosity rules to collected information...
+         */
+        $results = $this->filterDiagnostics($results);
 
         foreach ($results as $caption => $section_results) {
             $fieldset = wire('modules')->get('InputfieldFieldset');
             $fieldset->label = htmlspecialchars($caption, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-             $table = $this->modules->get("MarkupAdminDataTable"); 
-             $table->setEncodeEntities(false); 
+             $table = $this->modules->get("MarkupAdminDataTable");
+             $table->setEncodeEntities(false);
+             $table->setClass('diagnostics-table');
              $table->headerRow(array(
                 $this->_('Attribute'),
                 $this->_('Value'),
                 $this->_('Status'),
                 $this->_('Notes / Corrective Actions')
-             )); 
+             ));
 
 
              foreach ($section_results as $k => $row) {
@@ -467,12 +483,12 @@ class ProcessDiagnostics extends Process
             }
 
 
-             $markup = $this->modules->get("InputfieldMarkup"); 
+             $markup = $this->modules->get("InputfieldMarkup");
              $markup->set('value', $table->render());
 
              $fieldset->add($markup);
 
-             $inputfields->add($fieldset); 
+             $inputfields->add($fieldset);
         }
 
         return $inputfields->render();
