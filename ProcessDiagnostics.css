@@ -1,11 +1,11 @@
-.failure {
+.diagnostics-table .failure {
     background-color: #C33;
     color: #fff;
     font-weight: bold;
     padding:5px;
 }
 
-.warning {
+.diagnostics-table .warning {
     background-color: #F93;
     color: #fff;
     font-weight: bold;
