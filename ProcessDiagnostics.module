@@ -67,7 +67,7 @@ class ProcessDiagnostics extends Process
             'action' => $action,
         );
 
-        $mem = trim(ini_get('memory_limit'))
+        $mem = trim(ini_get('memory_limit'));
         $results[] = array(
             'title'  => $this->_('Max Memory'),
             'value'  => $mem,
