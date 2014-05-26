@@ -214,8 +214,9 @@ class ProcessDiagnostics extends Process
      */
     protected function getFilesystemDiagnostics()
     {
-        $install_file = $this->getFileSystemAttribs($this->_('Installation file'),      $this->wire->config->paths->root.'/install.php');
-        $install_dir  = $this->getFileSystemAttribs($this->_('Installation directory'), $this->wire->config->paths->root.'/site-default/');
+        $install_file = $this->getFileSystemAttribs($this->_('Installation file'),        $this->wire->config->paths->root.'/install.php');
+        $install_dir  = $this->getFileSystemAttribs($this->_('Installation directory'),   $this->wire->config->paths->root.'/site/install/');
+        $site_def_dir = $this->getFileSystemAttribs($this->_('/site-default/ directory'), $this->wire->config->paths->root.'/site-default/');
 
         $root_info    = $this->getFileSystemAttribs($this->_('Root directory'),    $this->wire->config->paths->root);
         $asset_info   = $this->getFileSystemAttribs($this->_('Assets directory'),  $this->wire->config->paths->assets);
@@ -248,9 +249,18 @@ class ProcessDiagnostics extends Process
             'title'  => $install_dir['name'],
             'value'  => $this->describeFSInfo($install_dir),
             'status' => ($inst_dir_ok) ? self::$ok : self::$fail,
-            'action' => ($inst_dir_ok) ? '' : (($site_info['exists']) ? $this->_('Delete the "/site-default/" directory.') :
-                                                                       $this->_('Rename "/site-default/" to "/site/".')),
+            'action' => ($inst_dir_ok) ? '' : $this->_('Delete the "/site/install/" directory.'),
         );
+
+        if ($site_def_dir['exists']) {
+            $results[] = array(
+                'title'  => $site_def_dir['name'],
+                'value'  => $this->describeFSInfo($site_def_dir),
+                'status' => ($inst_dir_ok) ? self::$ok : self::$fail,
+                'action' => ($inst_dir_ok) ? '' : (($site_info['exists']) ? $this->_('Delete the "/site-default/" directory.') :
+                                                                            $this->_('Installation should have renamed "/site-default/" to "/site/".')),
+                );
+        }
 
         $site_ok = $site_info['exists'] && $site_info['read'] && !$site_info['write'];
         $results[] = array(
