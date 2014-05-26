@@ -75,6 +75,42 @@ class ProcessDiagnostics extends Process
             'action' => ''
         );
 
+        $api     = null;   // string  full api info
+        $sys     = null;   // string  full sys info
+
+        ob_start();
+        phpinfo(INFO_GENERAL);
+        $buffer = str_replace("\r\n", "\n", ob_get_contents());
+        ob_end_clean();
+
+        $ver = phpversion();
+
+        $mem = trim(ini_get('memory_limit'));
+
+        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>Server API.*?</td><td.*?>(.*?)</td>#msi' : '#\nServer API.*?=>(.*?)\n#msi';
+        $api = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
+
+        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>System.*?</td><td.*?>(.*?)</td>#msi' : '#\nSystem.*?=>(.*?)\n#msi';
+        $sys = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
+
+
+        // build results array PHP Handler
+        $results[] = array(
+            'title'  => $this->_('PHP Handler'),
+            'value'  => $api,
+            'status' => self::$ok,
+            'action' => '',
+        );
+
+
+        // build results array PHP system info
+        $results[] = array(
+            'title'  => $this->_('System Information'),
+            'value'  => $sys,
+            'status' => self::$ok,
+            'action' => '',
+        );
+
         return $results;
     }
 
