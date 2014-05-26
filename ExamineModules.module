@@ -15,6 +15,7 @@ class ExamineModules extends Process
             'autoload'  => true,
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
+            'installs'  => 'ProcessDiagnostics',
             'author'    => 'Nico Knoll',
         );
     }
