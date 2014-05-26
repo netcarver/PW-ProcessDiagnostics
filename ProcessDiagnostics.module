@@ -439,6 +439,7 @@ class ProcessDiagnostics extends Process
 
              $table = $this->modules->get("MarkupAdminDataTable");
              $table->setEncodeEntities(false);
+             $table->setClass('diagnostics-table');
              $table->headerRow(array(
                 $this->_('Attribute'),
                 $this->_('Value'),
