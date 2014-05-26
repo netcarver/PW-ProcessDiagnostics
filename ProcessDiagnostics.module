@@ -417,11 +417,14 @@ class ProcessDiagnostics extends Process
         return $filtered;
     }
 
+
+
+
     public function ___execute()
     {
         $this->setFuel('processHeadline', $this->_('System Diagnostics'));
+        $inputfields = new InputfieldWrapper();
 
-        $out = "<p class='description'>". $this->_("Results of scanning your system...") . "</p>";
 
         $results = $this->collectDiagnostics();
 
@@ -431,42 +434,54 @@ class ProcessDiagnostics extends Process
         $results = $this->filterDiagnostics($results);
 
         foreach ($results as $caption => $section_results) {
+            $fieldset = wire('modules')->get('InputfieldFieldset');
+            $fieldset->label = htmlspecialchars($caption, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-            $out .= "\n<table class='DiagnosticsTable'>";
-            $out .= "\n<caption>" . htmlspecialchars($caption, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "</caption>";
-            $out .= "\n<thead><tr>";
-            $out .= "\n<th class='title'>".$this->_('Attribute')."</th>";
-            $out .= "\n<th class='value'>".$this->_('Value')."</th>";
-            $out .= "\n<th class='status'>".$this->_('Status')."</th>";
-            $out .= "\n<th class='action'>".$this->_('Notes / Corrective Actions')."</th>";
-            $out .= "\n</tr></thead>";
-            $out .= "\n<tbody>";
+             $table = $this->modules->get("MarkupAdminDataTable");
+             $table->setEncodeEntities(false);
+             $table->headerRow(array(
+                $this->_('Attribute'),
+                $this->_('Value'),
+                $this->_('Status'),
+                $this->_('Notes / Corrective Actions')
+             ));
 
-            foreach ($section_results as $k => $row) {
-                $class = 'ok';
-                switch ($row['status']) {
-                case self::$fail :
-                    $class = 'failure';
-                    break;
-                case self::$warn :
-                    $class = 'warning';
-                    break;
-                default :
-                    $class = 'ok';
-                }
 
-                $out .= "\n<tr>";
-                $out .= "\n<td>" . $row['title'] . "</td>";
-                $out .= "\n<td>" . $row['value'] . "</td>";
-                $out .= "\n<td class='status'><div class='$class'>" . $row['status'] . "</div></td>";
-                $out .= "\n<td>" . $row['action'] . "</td>";
-                $out .= "\n</tr>";
+             foreach ($section_results as $k => $row) {
+                 $class = 'ok';
+                 switch ($row['status']) {
+                 case self::$fail :
+                     $class = 'failure';
+                     break;
+                 case self::$warn :
+                     $class = 'warning';
+                     break;
+                 default :
+                     $class = 'ok';
+                 }
+
+
+                $table->row(array(
+                    html_entity_decode($row['title']),
+                    html_entity_decode($row['value']),
+                    '<span class="'.$class.'">' . $row['status'] . '</span>',
+                    html_entity_decode($row['action'])
+                ));
 
             }
-            $out .= "\n</tbody></table>";
+
+
+             $markup = $this->modules->get("InputfieldMarkup");
+             $markup->set('value', $table->render());
+
+             $fieldset->add($markup);
+
+             $inputfields->add($fieldset);
         }
-        return $out;
+
+        return $inputfields->render();
     }
+
 
 
     public function ___install()
