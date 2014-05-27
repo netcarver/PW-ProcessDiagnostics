@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional Database related information.
  */
-class ExamineDatabase extends Process
+class DiagnoseDatabase extends Process
 {
     public static function getModuleInfo()
     {

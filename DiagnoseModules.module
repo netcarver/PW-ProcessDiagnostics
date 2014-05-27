@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional module version related information.
  */
-class ExamineModules extends Process
+class DiagnoseModules extends Process
 {
     public static function getModuleInfo()
     {

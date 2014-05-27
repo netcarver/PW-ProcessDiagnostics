@@ -55,14 +55,14 @@ class ProcessDiagnostics extends Process
 
         self::$verbosity = self::HIGH_VERBOSITY;
 
-        $this->loadExaminationModules();
+        $this->loadDiagnosesModules();
     }
 
 
 
-    private function loadExaminationModules() {
+    private function loadDiagnosesModules() {
         foreach($this->modules as $module) {
-            if (preg_match('%^Examine%Uis', $module->name)) {
+            if (preg_match('%^Diagnose%Uis', $module->name)) {
                 $this->modules->get($module->name);
             }
         }

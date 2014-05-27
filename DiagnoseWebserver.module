@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional Web server related information.
  */
-class ExamineWebserver extends Process
+class DiagnoseWebserver extends Process
 {
     public static function getModuleInfo()
     {

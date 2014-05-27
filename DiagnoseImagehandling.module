@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional image handling related information.
  */
-class ExamineImagehandling extends Process
+class DiagnoseImagehandling extends Process
 {
     public static function getModuleInfo()
     {

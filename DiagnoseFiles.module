@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional filesystem related information.
  */
-class ExamineFiles extends Process
+class DiagnoseFiles extends Process
 {
     public static function getModuleInfo()
     {
