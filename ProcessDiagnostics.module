@@ -144,9 +144,11 @@ class ProcessDiagnostics extends Process
 
 
     /**
-     * To extend the collected information, just add a new method call to the list of arrays in this array merge.
-     * Each method must return an array of results (numerically keyed) and each result will be an array with four string
+     * To extend the collected information, DiagnoseXyz modules will hook this method and add results.
+     * Each hook must return an array of results and each result will be an array with four string
      * keys... 'title', 'value', 'status' and 'action'.
+     *
+     * Take a look at the Diagnose modules to see how this is done.
      */
     public function ___collectDiagnostics()
     {
