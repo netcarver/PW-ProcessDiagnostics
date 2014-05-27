@@ -29,7 +29,7 @@ class ProcessDiagnostics extends Process
         return array(
             'title'     => __('Diagnostics Page', __FILE__),
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
-            'version'   => 4,
+            'version'   => 20,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
