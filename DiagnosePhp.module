@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional PHP related information.
  */
-class DiagnosePhp extends Process
+class DiagnosePhp extends Wire implements Module
 {
 
     public static function getModuleInfo()
@@ -24,8 +24,6 @@ class DiagnosePhp extends Process
 
     public function init()
     {
-        parent::init();
-
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
     }
 

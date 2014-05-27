@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional filesystem related information.
  */
-class DiagnoseFiles extends Process
+class DiagnoseFiles extends Wire implements Module
 {
     public static function getModuleInfo()
     {
@@ -23,8 +23,6 @@ class DiagnoseFiles extends Process
 
     public function init()
     {
-        parent::init();
-
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
     }
 

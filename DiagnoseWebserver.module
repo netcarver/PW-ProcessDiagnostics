@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional Web server related information.
  */
-class DiagnoseWebserver extends Process
+class DiagnoseWebserver extends Wire implements Module
 {
     public static function getModuleInfo()
     {
@@ -23,8 +23,6 @@ class DiagnoseWebserver extends Process
 
     public function init()
     {
-        parent::init();
-
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
 
         $this->server_software = '';

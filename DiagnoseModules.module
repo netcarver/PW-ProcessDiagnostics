@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional module version related information.
  */
-class DiagnoseModules extends Process
+class DiagnoseModules extends Wire implements Module
 {
     public static function getModuleInfo()
     {
@@ -26,8 +26,6 @@ class DiagnoseModules extends Process
 
     public function init()
     {
-        parent::init();
-
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
 
         $this->config->js('DiagnosticsModules', array(
