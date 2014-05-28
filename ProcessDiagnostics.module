@@ -73,6 +73,23 @@ class ProcessDiagnostics extends Process
     }
 
 
+    /**
+     * Converts a number of bytes into a more human readable form
+     */
+    public static function humanSize($b)
+    {
+        if ($b < 1024) {
+            return "$b bytes";
+        } else if (strlen($b) <= 9 && strlen($b) >= 7) {
+            return number_format($b / 1048576, 2)." MB";
+        } elseif (strlen($b) >= 10) {
+            return number_format($b / 1073741824, 2)." GB";
+        }
+        return number_format($b / 1024, 2)." KB";
+    }
+
+
+
 
     /**
      * Reads basic FS parameters for the given file or directory.
