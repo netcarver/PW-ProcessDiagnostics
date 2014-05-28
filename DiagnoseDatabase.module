@@ -27,7 +27,174 @@ class DiagnoseDatabase extends Wire implements Module
     }
 
 
-    function checkTables()
+    /**
+     *
+     */
+    public function row($title, $value, $status = 'OK', $action = '')
+    {
+        if ('OK'   === $status) $status = ProcessDiagnostics::$ok;
+        if ('WARN' === $status) $status = ProcessDiagnostics::$warn;
+        if ('FAIL' === $status) $status = ProcessDiagnostics::$fail;
+
+        return array(
+            'title'  => $title,
+            'value'  => $value,
+            'status' => $status,
+            'action' => $action,
+        );
+    }
+
+
+    /**
+     *
+     */
+    public function chooseStatus(array $warnings, array $fails)
+    {
+        if (count($fails)) {
+            return ProcessDiagnostics::$fail;
+        }
+
+        if (count($warnings)) {
+            return ProcessDiagnostics::$warn;
+        }
+
+        return ProcessDiagnostics::$ok;
+    }
+
+
+    /**
+     *
+     */
+    public function collectVarsLike($pattern)
+    {
+        $out = array();
+        $group = $this->db->query('SHOW VARIABLES LIKE "'.$pattern.'"');
+        while ($r = $group->fetch_assoc()) {
+            $out[$r['Variable_name']] = $r['Value'];
+        }
+        return $out;
+    }
+
+
+    /**
+     *
+     */
+    public function renderCollectionAsCell($collection, $show_last = true)
+    {
+        $out = array();
+        foreach ($collection as $k => $v) {
+            if ($show_last) {
+                $k = explode('_', $k);
+                $k = ucwords($k[count($k)-1]);
+            }
+            $out[] = "$k: $v";
+        }
+        return implode('<br>', $out);
+    }
+
+    /**
+     *
+     */
+    public function checkTables2()
+    {
+        $version = $this->db->query('SELECT VERSION() as version');
+        $version = $version->fetch_assoc();
+        $version = $version['version'];
+        $results[] = $this->row($this->_('Server Version'), $version);
+
+        /**
+         * Check character sets for possible mismatches in the client -> connection -> db -> results chain...
+         */
+        $charsets   = $this->collectVarsLike('character_set_%');
+        unset($charsets['character_sets_dir']);
+        unset($charsets['character_set_filesystem']);
+        unset($charsets['character_set_server']);
+        unset($charsets['character_set_system']);
+        $charsets = array('PW' => $this->wire->config->dbCharset) + $charsets;
+        $warnings = array();
+        if ($charsets['PW'] !== 'utf8') {
+            $warnings[] = $this->_('The usual encoding for the DB in ProcessWire is "utf8".');
+        }
+
+        foreach ($charsets as $k => $v) {
+            if ($charsets['PW'] !== $v) {
+                $warnings[] = $this->_('Character sets mismatched. Components will be forced to convert between character sets possibly introducing transliterations or incorrectly displaying results.');
+                break;
+            }
+        }
+
+        $results[] = array(
+            'title'  => $this->_('Character set chain'),
+            'value'  => $this->renderCollectionAsCell($charsets),
+            'status' => $this->chooseStatus($warnings, array()),
+            'action' => implode('<br>', $warnings),
+        );
+
+        $collations = $this->collectVarsLike('collation_%');
+        unset($collations['collation_server']);
+        $collation_mismatch = $collations['collation_connection'] !== $collations['collation_database'];
+        $results[] = array(
+            'title'  => $this->_('Collation chain'),
+            'value'  => $this->renderCollectionAsCell($collations),
+            'status' => $collation_mismatch ? ProcessDiagnostics::$warn : ProcessDiagnostics::$ok,
+            'action' => $collation_mismatch ? $this->_('Connection and Database are using different collations. This might change the expected sort order of some queries.') : '',
+        );
+
+        if ($this->wire->config->dbSocket) {
+            $results[] = $this->row($this->_('Server Connection'), $this->_('socket: ') . $this->wire->config->dbSocket);
+        } else {
+            $results[] = $this->row($this->_('Server Location'), $this->wire->config->dbHost . ':' . $this->wire->config->dbPort);
+        }
+
+        $results[] = $this->row($this->_('Using Database'), $this->wire->config->dbName);
+
+        $tables = $this->db->query("SHOW TABLE STATUS");
+        while ($t = $tables->fetch_assoc()) {
+            $warnings = array();
+            $fails    = array();
+            $notes    = array();
+
+            extract($t, EXTR_PREFIX_ALL, 't');
+
+            // MyISAM maintains an exact row count. Other engines don't necessarily so get the actual row count...
+            if ('MyISAM' !== $t_Engine) {
+                $count  = $this->db->query("SELECT COUNT(*) AS `rows` FROM `$t_Name`");
+                $count  = $count->fetch_assoc();
+                $t_Rows = $count['rows'];
+            }
+
+
+            $wasted = '';
+            if ($t_Data_free) {
+                $wasted = '<br>'. $this->_('Overhead: ') . ProcessDiagnostics::humanSize($t_Data_free);
+                $warnings[] = $this->_('Repair table to reclaim space.');
+            }
+
+            $t_Data_length  = $this->_('Data: ')  . ProcessDiagnostics::humanSize($t_Data_length);
+            $t_Index_length = $this->_('Index: ') . ProcessDiagnostics::humanSize($t_Index_length);
+
+            if (!preg_match("/^{$this->wire->config->dbCharset}/ui", $t_Collation)) {
+                if ($t_Name !== 'field_pass') {
+                    $charset = explode('_', $t_Collation);
+                    $charset = $charset[0];
+                    $warnings[] = $this->_('Character set mismatch with connection. This <em>might</em> lead to data corruption. Sanitise your data to match '.$charset.' before sending it to the DB.');
+                } else {
+                    $notes[] = $this->_('Although the character set mismatches the connection character set, the data stored in this table is sanitised correctly by PW before being sent to the DB.');
+                }
+            }
+
+            $results[] = array(
+                'title'  => "<strong>$t_Name</strong><br>$t_Engine / $t_Collation",
+                'value'  => $this->_('Rows: ') . "$t_Rows<br>$t_Data_length<br>$t_Index_length$wasted",
+                'status' => $this->chooseStatus($warnings, $fails),
+                'action' => implode('<br>', array_merge($fails, $warnings, $notes)),
+            );
+        }
+
+        return $results;
+    }
+
+    public function checkTables()
     {
         $msgs   = array();
         $tables = array();
@@ -38,19 +205,12 @@ class DiagnoseDatabase extends Wire implements Module
         }
 
         foreach ($tables as $table) {
-            $result = $this->db->query("CHECK TABLE `$table` QUICK");
+            $result = $t->db->query("CHECK TABLE `$table` QUICK");
             while ($row = $result->fetch_assoc()) {
 
                 switch ($row['Msg_type']) {
-                    case 'error' :
-                        $status = ProcessDiagnostics::$fail;
-                        break;
-
-                    case 'warning' :
-                        $status = ProcessDiagnostics::$warn;
-                        break;
-
                     default:
+
                         $status = ProcessDiagnostics::$ok;
                         break;
                 }
@@ -95,7 +255,7 @@ class DiagnoseDatabase extends Wire implements Module
             'action' => '',
         );
 
-        $results = $this->checkTables();
+        $results = $this->checkTables2();
 
         return $results;
     }
