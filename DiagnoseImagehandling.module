@@ -3,7 +3,7 @@
 /**
  * Hooks into ProcessDiagnostics to add additional image handling related information.
  */
-class DiagnosticsImagehandling extends Process
+class DiagnoseImagehandling extends Wire implements Module
 {
     public static function getModuleInfo()
     {
@@ -13,7 +13,9 @@ class DiagnosticsImagehandling extends Process
             'version'   => 1,
             'permanent' => false,
             'autoload'  => false,
+            'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
+            'installs'  => 'ProcessDiagnostics',
             'author'    => 'Horst',
         );
     }
@@ -21,8 +23,6 @@ class DiagnosticsImagehandling extends Process
 
     public function init()
     {
-        parent::init();
-
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
     }
 

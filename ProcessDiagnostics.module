@@ -11,6 +11,13 @@ class ProcessDiagnostics extends Process
     public static $fail;
     public static $warn;
 
+    public static $exists;
+    public static $not_exists;
+    public static $read;
+    public static $not_read;
+    public static $write;
+    public static $not_write;
+
     public static $verbosity;
 
     const LOW_VERBOSITY    = 1;
@@ -22,9 +29,10 @@ class ProcessDiagnostics extends Process
         return array(
             'title'     => __('Diagnostics Page', __FILE__),
             'summary'   => __('Allows evaluation of run-time environment and detection of changes.', __FILE__),
-            'version'   => 1.5,
+            'version'   => 20,
             'permanent' => false,
             'autoload'  => false,
+            'singular'  => true,
             'author'    => 'Stephen Dickinson, QBox',
         );
     }
@@ -34,126 +42,38 @@ class ProcessDiagnostics extends Process
     {
         parent::init();
 
-        $this->server_software = '';
-        if (isset($_SERVER['SERVER_SOFTWARE'])) {
-            $this->server_software = $_SERVER['SERVER_SOFTWARE'];
-        } else if (isset($_SERVER['HTTP_HOST'])) {
-            $this->server_software = $_SERVER['HTTP_HOST'];
-        }
-
-        $this->is_apache = (($this->server_software && stristr($this->server_software, 'apache')) || is_callable('apache_get_version'));
-
         self::$ok   = $this->_('OK');
         self::$fail = $this->_('Failure');
         self::$warn = $this->_('Warning');
 
+        self::$exists     = $this->_('Exists');
+        self::$not_exists = $this->_('Does not exist.');
+        self::$read       = $this->_('is readable');
+        self::$not_read   = $this->_('is not readable');
+        self::$write      = $this->_('is writable');
+        self::$not_write  = $this->_('is not writable');
+
         self::$verbosity = self::HIGH_VERBOSITY;
-        
-        $this->loadExamines();   
+
+        $this->loadDiagnosesModules();
     }
-    
-    
-    
-    private function loadExamines() {
+
+
+
+    private function loadDiagnosesModules() {
         foreach($this->modules as $module) {
-            if (preg_match('%^Diagnostics%Uis', $module->name)) {
+            if (preg_match('%^Diagnose%Uis', $module->name)) {
                 $this->modules->get($module->name);
             }
         }
     }
 
 
-    /**
-     * Returns a diagnostic array about the current version of PHP and how that ties in with the version needed by PW.
-     *
-     * TODO: Have PW define it's required PHP version in the core, not just the installer.
-     */
-    protected function getPHPDiagnostics()
-    {
-        $fail_limit = '5.3.8';
-
-        $status = self::$ok;
-        $action = '';
-        if (version_compare(PHP_VERSION, $fail_limit) < 0) {
-            $status = self::$fail;
-            $action = $this->_("Upgrade your PHP installation to at least version ").$fail_limit;
-        }
-
-        $results[] = array(
-            'title'  => $this->_('Version'),
-            'value'  => PHP_VERSION,
-            'status' => $status,
-            'action' => $action,
-        );
-
-        $mem = trim(ini_get('memory_limit'));
-        $results[] = array(
-            'title'  => $this->_('Max Memory'),
-            'value'  => $mem,
-            'status' => self::$ok,
-            'action' => ''
-        );
-
-        $api     = null;   // string  full api info
-        $sys     = null;   // string  full sys info
-
-        ob_start();
-        phpinfo(INFO_GENERAL);
-        $buffer = str_replace("\r\n", "\n", ob_get_contents());
-        ob_end_clean();
-
-        $ver = phpversion();
-
-        $mem = trim(ini_get('memory_limit'));
-
-        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>Server API.*?</td><td.*?>(.*?)</td>#msi' : '#\nServer API.*?=>(.*?)\n#msi';
-        $api = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
-
-        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>System.*?</td><td.*?>(.*?)</td>#msi' : '#\nSystem.*?=>(.*?)\n#msi';
-        $sys = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
-
-
-        // build results array PHP Handler
-        $results[] = array(
-            'title'  => $this->_('Handler'),
-            'value'  => $api,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-
-        // build results array PHP system info
-        $results[] = array(
-            'title'  => $this->_('System Information'),
-            'value'  => $sys,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-        return $results;
-    }
-
-
-    /**
-     * Returns a diagnostic array about the current time settings.
-     */
-    protected function getTimeDiagnostics()
-    {
-        $results[] = array(
-            'title'  => $this->_('Timezone'),
-            'value'  => $this->wire->config->timezone,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-        return $results;
-    }
-
 
     /**
      * Reads basic FS parameters for the given file or directory.
      */
-    protected function getFileSystemAttribs($name, $pathspec)
+    public static function getFileSystemAttribs($name, $pathspec)
     {
         $fs_info = array(
             'name'   => $name,
@@ -185,187 +105,33 @@ class ProcessDiagnostics extends Process
     /**
      * Creates a text description from the given file information.
      */
-    public function describeFSInfo($info)
+    public static function describeFSInfo($info)
     {
         $out = array();
 
         if ($info['exists']) {
-            $out[] = $this->_('Exists');
+            $out[] = self::$exists;
 
             if ($info['read']) {
-                $out[] = $this->_('is readable');
+                $out[] = self::$read;
             } else {
-                $out[] = $this->_('is not readable');
+                $out[] = self::$not_read;
             }
 
             if ($info['write']) {
-                $out[] = $this->_('is writable');
+                $out[] = self::$write;
             } else {
-                $out[] = $this->_('is not writable');
+                $out[] = self::$not_write;
             }
 
             $out[] = substr(sprintf('%o', $info['perms']), -4);
         } else {
-            $out[] = $this->_('Does not exist.');
+            $out[] = self::$not_exists;
         }
 
         return implode(', ', $out);
     }
 
-
-    /**
-     * Returns a diagnostic array about the webserver.
-     *
-     * For Apache, this also checks if the .htaccess file is in the right place and is readable by the webserver.
-     */
-    protected function getWebserverDiagnostics()
-    {
-        $results[] = array(
-            'title'  => $this->_('Webserver'),
-            'value'  => $this->server_software,
-            'status' => self::$ok,
-            'action' => '',
-        );
-
-        if ($this->is_apache) {
-            if (is_callable('apache_get_modules')) {
-                $apache_modules = apache_get_modules();
-
-                $rewrite_ok = in_array('mod_rewrite', $apache_modules);
-                $results[] = array(
-                    'title'  => $this->_('Apache mod_rewrite'),
-                    'value'  => $rewrite_ok ? $this->_('Installed') :
-                                              $this->_('Not installed'),
-                    'status' => $rewrite_ok ? self::$ok : self::$fail,
-                    'action' => $rewrite_ok ? '' : $this->_('Install mod_rewrite, it\'s currently not available to Apache.'),
-                );
-            }
-
-            $ht_info = $this->getFileSystemAttribs('.htaccess', $this->wire->config->paths->root.'/.htaccess');
-            $httext_info = $this->getFileSystemAttribs('htaccess.txt', $this->wire->config->paths->root.'/htaccess.txt');
-
-            $ht_ok        = $ht_info['exists'] && $ht_info['read'];
-            $ht_write     = $ht_info['write'];
-            $ht_status    = self::$fail;
-            if ($ht_ok) {
-                if ($ht_write) {
-                    $ht_status = self::$warn;
-                } else {
-                    $ht_status = self::$ok;
-                }
-            }
-            $ht_mv_needed = $httext_info['exists'] && !$ht_info['exists'];
-
-            if ($httext_info['exists']) {
-                // Diagnostics for the htaccess.txt file...
-                $results[] = array(
-                    'title'  => 'htaccess.txt',
-                    'value'  => $this->describeFSInfo($httext_info),
-                    'status' => ($ht_mv_needed || $httext_info['exists']) ? self::$fail : self::$ok,
-                    'action' => $ht_mv_needed ? $this->_('Rename htaccess.txt to .htaccess') :
-                    $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
-                    );
-            }
-
-            // Diagnostics for the .htaccess file...
-            $results[] = array(
-                'title'  => $this->_('.htaccess file'),
-                'value'  => $this->describeFSInfo($ht_info),
-                'status' => $ht_status,
-                'action' => $ht_ok && !$ht_write ? '' : $this->_('.htaccess must exist, must be readable, should <strong>not</strong> be writable.'),
-            );
-        }
-
-        return $results;
-    }
-
-
-    /**
-     * TODO extend these checks to cover other users in the system, not just the webserver user. For example, if a dir
-     * is 777 it's probably too wide open and at least needs a warning generated.
-     */
-    protected function getFilesystemDiagnostics()
-    {
-        $install_file = $this->getFileSystemAttribs($this->_('Installation file'),        $this->wire->config->paths->root.'/install.php');
-        $install_dir  = $this->getFileSystemAttribs($this->_('Installation directory'),   $this->wire->config->paths->root.'/site/install/');
-        $site_def_dir = $this->getFileSystemAttribs($this->_('/site-default/ directory'), $this->wire->config->paths->root.'/site-default/');
-
-        $root_info    = $this->getFileSystemAttribs($this->_('Root directory'),    $this->wire->config->paths->root);
-        $asset_info   = $this->getFileSystemAttribs($this->_('Assets directory'),  $this->wire->config->paths->assets);
-        $cache_info   = $this->getFileSystemAttribs($this->_('Cache directory'),   $this->wire->config->paths->cache);
-        $sess_info    = $this->getFileSystemAttribs($this->_('Session directory'), $this->wire->config->paths->sessions);
-        $site_info    = $this->getFileSystemAttribs($this->_('Site directory'),    $this->wire->config->paths->site);
-
-        $inst_file_ok = !$install_file['exists'];
-        $inst_dir_ok  = !$install_dir['exists'];
-        $root_ok      =  $root_info['exists']  &&  $root_info['read']  && !$root_info['write'];
-        $assets_ok    =  $asset_info['exists'] &&  $asset_info['read'] &&  $asset_info['write'];
-        $cache_ok     =  $cache_info['exists'] &&  $cache_info['read'] &&  $cache_info['write'];
-        $sessions_ok  =  $sess_info['exists']  &&  $sess_info['read']  &&  $sess_info['write'];
-
-        $results[] = array(
-            'title'  => $root_info['name'],
-            'value'  => $this->describeFSInfo($root_info),
-            'status' => ($root_ok) ? self::$ok : self::$fail,
-            'action' => ($root_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
-        );
-
-        $results[] = array(
-            'title'  => $install_file['name'],
-            'value'  => $this->describeFSInfo($install_file),
-            'status' => ($inst_file_ok) ? self::$ok : self::$fail,
-            'action' => ($inst_file_ok) ? '' : $this->_('Delete the file "install.php".'),
-        );
-
-        $results[] = array(
-            'title'  => $install_dir['name'],
-            'value'  => $this->describeFSInfo($install_dir),
-            'status' => ($inst_dir_ok) ? self::$ok : self::$fail,
-            'action' => ($inst_dir_ok) ? '' : $this->_('Delete the "/site/install/" directory.'),
-        );
-
-        if ($site_def_dir['exists']) {
-            $results[] = array(
-                'title'  => $site_def_dir['name'],
-                'value'  => $this->describeFSInfo($site_def_dir),
-                'status' => ($inst_dir_ok) ? self::$ok : self::$fail,
-                'action' => ($inst_dir_ok) ? '' : (($site_info['exists']) ? $this->_('Delete the "/site-default/" directory.') :
-                                                                            $this->_('Installation should have renamed "/site-default/" to "/site/".')),
-                );
-        }
-
-        $site_ok = $site_info['exists'] && $site_info['read'] && !$site_info['write'];
-        $results[] = array(
-            'title'  => $site_info['name'],
-            'value'  => $this->describeFSInfo($site_info),
-            'status' => ($site_ok) ? self::$ok : self::$fail,
-            'action' => ($site_ok) ? '' : $this->_('Folder should not be writable for webserver user.'),
-        );
-
-        $results[] = array(
-            'title'  => $asset_info['name'],
-            'value'  => $this->describeFSInfo($asset_info),
-            'status' => ($assets_ok) ? self::$ok : self::$fail,
-            'action' => ($assets_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
-        );
-
-        $results[] = array(
-            'title'  => $cache_info['name'],
-            'value'  => $this->describeFSInfo($cache_info),
-            'status' => ($cache_ok) ? self::$ok : self::$fail,
-            'action' => ($cache_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
-        );
-
-        $results[] = array(
-            'title'  => $sess_info['name'],
-            'value'  => $this->describeFSInfo($sess_info),
-            'status' => ($sessions_ok) ? self::$ok : self::$fail,
-            'action' => ($sessions_ok) ? '' : $this->_('Folder should be writable for webserver user.'),
-        );
-
-
-        return $results;
-    }
 
 
     /**
@@ -378,17 +144,15 @@ class ProcessDiagnostics extends Process
 
 
     /**
-     * To extend the collected information, just add a new method call to the list of arrays in this array merge.
-     * Each method must return an array of results (numerically keyed) and each result will be an array with four string
+     * To extend the collected information, DiagnoseXyz modules will hook this method and add results.
+     * Each hook must return an array of results and each result will be an array with four string
      * keys... 'title', 'value', 'status' and 'action'.
+     *
+     * Take a look at the Diagnose modules to see how this is done.
      */
     public function ___collectDiagnostics()
     {
         $results = array(
-            $this->_('PHP Diagnostics')            => $this->getPHPDiagnostics(),
-            $this->_('Webserver Diagnostics')      => $this->getWebserverDiagnostics(),
-            $this->_('Filesystem Diagnostics')     => $this->getFilesystemDiagnostics(),
-            $this->_('Date/Time Diagnostics')      => $this->getTimeDiagnostics()
         );
 
         return $results;

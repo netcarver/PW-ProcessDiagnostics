@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * Hooks into ProcessDiagnostics to add additional PHP related information.
+ */
+class DiagnosePhp extends Wire implements Module
+{
+
+    public static function getModuleInfo()
+    {
+        return array(
+            'title'     => __('PHP Diagnostics', __FILE__),
+            'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
+            'version'   => 1,
+            'permanent' => false,
+            'autoload'  => false,
+            'singular'  => true,
+            'requires'  => 'ProcessDiagnostics',
+            'installs'  => 'ProcessDiagnostics',
+            'author'    => 'Stephen Dickinson, QBox',
+        );
+    }
+
+
+    public function init()
+    {
+        $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
+    }
+
+    /**
+     * Collects Diagnostics.
+     */
+    public function GetDiagnostics()
+    {
+        $fail_limit = '5.3.8';
+
+        $status = ProcessDiagnostics::$ok;
+        $action = '';
+        if (version_compare(PHP_VERSION, $fail_limit) < 0) {
+            $status = ProcessDiagnostics::$fail;
+            $action = $this->_("Upgrade your PHP installation to at least version ").$fail_limit;
+        }
+
+        $results[] = array(
+            'title'  => $this->_('Version'),
+            'value'  => PHP_VERSION,
+            'status' => $status,
+            'action' => $action,
+        );
+
+        $mem = trim(ini_get('memory_limit'));
+        $results[] = array(
+            'title'  => $this->_('Max Memory'),
+            'value'  => $mem,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => ''
+        );
+
+        $api     = null;   // string  full api info
+        $sys     = null;   // string  full sys info
+
+        ob_start();
+        phpinfo(INFO_GENERAL);
+        $buffer = str_replace("\r\n", "\n", ob_get_contents());
+        ob_end_clean();
+
+        $ver = phpversion();
+
+        $mem = trim(ini_get('memory_limit'));
+
+        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>Server API.*?</td><td.*?>(.*?)</td>#msi' : '#\nServer API.*?=>(.*?)\n#msi';
+        $api = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
+
+        $pattern = preg_match('#</td>#msi', $buffer)===1 ? '#>System.*?</td><td.*?>(.*?)</td>#msi' : '#\nSystem.*?=>(.*?)\n#msi';
+        $sys = preg_match($pattern, $buffer, $matches)===1 ? trim($matches[1]) : null;
+
+
+        // build results array PHP Handler
+        $results[] = array(
+            'title'  => $this->_('Handler'),
+            'value'  => $api,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+
+        // build results array PHP system info
+        $results[] = array(
+            'title'  => $this->_('System Information'),
+            'value'  => $sys,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        $results[] = array(
+            'title'  => $this->_('Timezone'),
+            'value'  => $this->wire->config->timezone,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        return $results;
+    }
+
+
+    public function AppendDiagnostics($event)
+    {
+        $results = $event->return;
+        $results[$this->_('PHP Diagnostics')] = $this->GetDiagnostics();
+        $event->return = $results;
+    }
+}

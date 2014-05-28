@@ -1,0 +1,110 @@
+<?php
+
+/**
+ * Hooks into ProcessDiagnostics to add additional Database related information.
+ */
+class DiagnoseDatabase extends Wire implements Module
+{
+    public static function getModuleInfo()
+    {
+        return array(
+            'title'     => __('Database Diagnostics', __FILE__),
+            'summary'   => __('Allows collection of database diagnostics', __FILE__),
+            'version'   => 1,
+            'permanent' => false,
+            'autoload'  => false,
+            'singular'  => true,
+            'requires'  => 'ProcessDiagnostics',
+            'installs'  => 'ProcessDiagnostics',
+            'author'    => 'Stephen Dickinson, QBox',
+        );
+    }
+
+
+    public function init()
+    {
+        $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
+    }
+
+
+    function checkTables()
+    {
+        $msgs   = array();
+        $tables = array();
+
+        $result = $this->db->query("SHOW TABLES");
+        while ($row = $result->fetch_assoc()) {
+            $tables[] = array_shift($row);
+        }
+
+        foreach ($tables as $table) {
+            $result = $this->db->query("CHECK TABLE `$table` QUICK");
+            while ($row = $result->fetch_assoc()) {
+
+                switch ($row['Msg_type']) {
+                    case 'error' :
+                        $status = ProcessDiagnostics::$fail;
+                        break;
+
+                    case 'warning' :
+                        $status = ProcessDiagnostics::$warn;
+                        break;
+
+                    default:
+                        $status = ProcessDiagnostics::$ok;
+                        break;
+                }
+
+
+                $t = $this->db->query("SHOW CREATE TABLE `$table`");
+                $info = $t->fetch_assoc();
+                if (preg_match('/ENGINE=([^\s]+)\s/ui', $info['Create Table'], $m)) {
+                    $engine = $m[1];
+                } else {
+                    $engine = 'Unknown';
+                }
+
+                if (preg_match('/DEFAULT CHARSET=([^\s]+)/ui', $info['Create Table'], $m)) {
+                    $charset = $m[1];
+                } else {
+                    $charset = 'Unknown';
+                }
+
+                $msgs[] = array(
+                    'title'  => $table,
+                    'value'  => "$engine, '$charset'",
+                    'status' => $status,
+                    'action' => 'OK' !== $row['Msg_text'] ? $row['Msg_text'] : '',
+                );
+            }
+        }
+
+        return $msgs;
+    }
+
+
+    /**
+     * Collects DB Diagnostics.
+     */
+    public function GetDiagnostics()
+    {
+        $results[] = array(
+            'title'  => 'DB Provider',
+            'value'  => 'PDO::MySQL',
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        $results = $this->checkTables();
+
+        return $results;
+    }
+
+
+    public function AppendDiagnostics($event)
+    {
+        $results = $event->return;
+        $results[$this->_('Database Diagnostics')] = $this->GetDiagnostics();
+        $event->return = $results;
+    }
+}
