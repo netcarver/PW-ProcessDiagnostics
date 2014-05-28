@@ -20,6 +20,8 @@ class ProcessDiagnostics extends Process
 
     public static $verbosity;
 
+    protected static $disabled_functions;
+
     const LOW_VERBOSITY    = 1;
     const MEDIUM_VERBOSITY = 2;
     const HIGH_VERBOSITY   = 4;
@@ -54,6 +56,8 @@ class ProcessDiagnostics extends Process
         self::$not_write  = $this->_('is not writable');
 
         self::$verbosity = self::HIGH_VERBOSITY;
+
+        self::$disabled_functions = explode(',' , str_replace(' ', '', strtolower(ini_get('disable_functions'))));
 
         $this->loadDiagnosesModules();
     }
@@ -156,6 +160,15 @@ class ProcessDiagnostics extends Process
         );
 
         return $results;
+    }
+
+    /**
+     * returns if function is disabled in php
+     *
+     * @return boolean: true, false
+     */
+    static public function isDisabled($function) {
+        return in_array(strtolower($function), self::$disabled_functions);
     }
 
 
