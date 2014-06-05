@@ -150,7 +150,7 @@ class DiagnoseDatabase extends Wire implements Module
             }
 
             $results[] = array(
-                'title'  => "<strong>$t_Name</strong><br>$t_Engine / $t_Collation",
+                'title'  => "<span id='table_{$t_Name}'><strong>$t_Name</strong></span><br>$t_Engine / $t_Collation",
                 'value'  => $this->_('Rows: ') . "$t_Rows<br>$t_Data_length<br>$t_Index_length$wasted",
                 'status' => ProcessDiagnostics::chooseStatus($warnings, $fails),
                 'action' => implode('<br>', array_merge($fails, $warnings, $notes)),
