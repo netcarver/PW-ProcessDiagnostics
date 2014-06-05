@@ -244,7 +244,7 @@ class DiagnoseDatabase extends Wire implements Module
 
                 switch ($action) {
                     case 'optimize':
-                        $result = $this->db->query("OPTIMIZE TABLE `$table`");
+                        $result = $this->db->query("OPTIMIZE NO_WRITE_TO_BINLOG TABLE `$table`");
                         $this->message($owner.' '.$this->_('optimized table: '.$table));
                         break;
 
