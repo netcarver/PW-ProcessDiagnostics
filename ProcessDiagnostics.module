@@ -90,6 +90,33 @@ class ProcessDiagnostics extends Process
 
 
 
+    /**
+     *
+     */
+    public static function row($title, $value, $status = 'OK', $action = '')
+    {
+        switch ($status) {
+            case 'OK' :
+                $status = ProcessDiagnostics::$ok;
+                break;
+            case 'NOTICE' :
+                $status = ProcessDiagnostics::$notics;
+                break;
+            case 'WARN' :
+                $status = ProcessDiagnostics::$warn;
+                break;
+            case 'FAIL' :
+                $status = ProcessDiagnostics::$fail;
+                break;
+        }
+
+        return array(
+            'title'  => $title,
+            'value'  => $value,
+            'status' => $status,
+            'action' => $action,
+        );
+    }
 
     /**
      * Reads basic FS parameters for the given file or directory.
@@ -122,6 +149,22 @@ class ProcessDiagnostics extends Process
         return $fs_info;
     }
 
+
+    /**
+     *
+     */
+    public static function chooseStatus(array $warnings, array $fails)
+    {
+        if (count($fails)) {
+            return ProcessDiagnostics::$fail;
+        }
+
+        if (count($warnings)) {
+            return ProcessDiagnostics::$warn;
+        }
+
+        return ProcessDiagnostics::$ok;
+    }
 
     /**
      * Creates a text description from the given file information.

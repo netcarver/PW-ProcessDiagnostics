@@ -27,40 +27,6 @@ class DiagnoseDatabase extends Wire implements Module
     }
 
 
-    /**
-     *
-     */
-    public function row($title, $value, $status = 'OK', $action = '')
-    {
-        if ('OK'   === $status) $status = ProcessDiagnostics::$ok;
-        if ('WARN' === $status) $status = ProcessDiagnostics::$warn;
-        if ('FAIL' === $status) $status = ProcessDiagnostics::$fail;
-
-        return array(
-            'title'  => $title,
-            'value'  => $value,
-            'status' => $status,
-            'action' => $action,
-        );
-    }
-
-
-    /**
-     *
-     */
-    public function chooseStatus(array $warnings, array $fails)
-    {
-        if (count($fails)) {
-            return ProcessDiagnostics::$fail;
-        }
-
-        if (count($warnings)) {
-            return ProcessDiagnostics::$warn;
-        }
-
-        return ProcessDiagnostics::$ok;
-    }
-
 
     /**
      *
@@ -100,7 +66,7 @@ class DiagnoseDatabase extends Wire implements Module
         $version = $this->db->query('SELECT VERSION() as version');
         $version = $version->fetch_assoc();
         $version = $version['version'];
-        $results[] = $this->row($this->_('Server Version'), $version);
+        $results[] = ProcessDiagnostics::row($this->_('Server Version'), $version);
 
         /**
          * Check character sets for possible mismatches in the client -> connection -> db -> results chain...
@@ -126,7 +92,7 @@ class DiagnoseDatabase extends Wire implements Module
         $results[] = array(
             'title'  => $this->_('Character set chain'),
             'value'  => $this->renderCollectionAsCell($charsets),
-            'status' => $this->chooseStatus($warnings, array()),
+            'status' => ProcessDiagnostics::chooseStatus($warnings, array()),
             'action' => implode('<br>', $warnings),
         );
 
@@ -141,12 +107,12 @@ class DiagnoseDatabase extends Wire implements Module
         );
 
         if ($this->wire->config->dbSocket) {
-            $results[] = $this->row($this->_('Server Connection'), $this->_('socket: ') . $this->wire->config->dbSocket);
+            $results[] = ProcessDiagnostics::row($this->_('Server Connection'), $this->_('socket: ') . $this->wire->config->dbSocket);
         } else {
-            $results[] = $this->row($this->_('Server Location'), $this->wire->config->dbHost . ':' . $this->wire->config->dbPort);
+            $results[] = ProcessDiagnostics::row($this->_('Server Location'), $this->wire->config->dbHost . ':' . $this->wire->config->dbPort);
         }
 
-        $results[] = $this->row($this->_('Using Database'), $this->wire->config->dbName);
+        $results[] = ProcessDiagnostics::row($this->_('Using Database'), $this->wire->config->dbName);
 
         $tables = $this->db->query("SHOW TABLE STATUS");
         while ($t = $tables->fetch_assoc()) {
@@ -186,7 +152,7 @@ class DiagnoseDatabase extends Wire implements Module
             $results[] = array(
                 'title'  => "<strong>$t_Name</strong><br>$t_Engine / $t_Collation",
                 'value'  => $this->_('Rows: ') . "$t_Rows<br>$t_Data_length<br>$t_Index_length$wasted",
-                'status' => $this->chooseStatus($warnings, $fails),
+                'status' => ProcessDiagnostics::chooseStatus($warnings, $fails),
                 'action' => implode('<br>', array_merge($fails, $warnings, $notes)),
             );
         }
