@@ -24,8 +24,8 @@ class DiagnoseDatabase extends Wire implements Module
     public function init()
     {
         $this->addHookAfter('ProcessDiagnostics::collectDiagnostics', $this, 'AppendDiagnostics');
+        $this->addHookBefore('ProcessDiagnostics::action', $this, 'PerformActions');
     }
-
 
 
     /**
@@ -133,7 +133,7 @@ class DiagnoseDatabase extends Wire implements Module
             $wasted = '';
             if ($t_Data_free) {
                 $wasted = '<br>'. $this->_('Overhead: ') . ProcessDiagnostics::humanSize($t_Data_free);
-                $warnings[] = $this->_('Repair table to reclaim space.');
+                $warnings[] = '<a href="?owner='.__CLASS__.'&action=optimize&table='.$t_Name.'">'.$this->_('Optimize').'</a>' . $this->_(' table to reclaim space and reorganize indexes.');
             }
 
             $t_Data_length  = $this->_('Data: ')  . ProcessDiagnostics::humanSize($t_Data_length);
@@ -225,6 +225,37 @@ class DiagnoseDatabase extends Wire implements Module
 
         return $results;
     }
+
+
+
+    /**
+     *
+     */
+    public function PerformActions($event)
+    {
+        $owner  = $event->arguments(0);
+
+        if (__CLASS__ === $owner) {
+            $actions = array('optimize');
+
+            $action = $event->arguments(1);
+            if (in_array($action, $actions)) {
+                $table = $this->sanitizer->name($this->input->get('table'));
+
+                switch ($action) {
+                    case 'optimize':
+                        $result = $this->db->query("OPTIMIZE TABLE `$table`");
+                        $this->message($owner.' '.$this->_('optimized table: '.$table));
+                        break;
+
+                    default:
+                        // No action!
+                        break;
+                }
+            }
+        }
+    }
+
 
 
     public function AppendDiagnostics($event)
