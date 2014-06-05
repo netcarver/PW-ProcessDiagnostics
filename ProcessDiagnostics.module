@@ -60,6 +60,13 @@ class ProcessDiagnostics extends Process
         self::$disabled_functions = explode(',' , str_replace(' ', '', strtolower(ini_get('disable_functions'))));
 
         $this->loadDiagnosesModules();
+
+        if ($owner = $this->sanitizer->fieldName($this->input->get('owner'))) {
+            if ($this->modules->isInstalled($owner) && 'Diagnose' === substr($owner, 0, 8)) {
+                $action = $this->sanitizer->fieldName($this->input->get('action'));
+                $this->action($owner, $action);
+            }
+        }
     }
 
 
@@ -221,6 +228,14 @@ class ProcessDiagnostics extends Process
 
         return $results;
     }
+
+
+
+    public function ___action()
+    {
+    }
+
+
 
     /**
      * returns if function is disabled in php
