@@ -236,14 +236,13 @@ class DiagnoseDatabase extends Wire implements Module
         $owner  = $event->arguments(0);
 
         if (__CLASS__ === $owner) {
-            $actions = array('optimize');
-
+            $valid_actions = array('optimize');
             $action = $event->arguments(1);
-            if (in_array($action, $actions)) {
-                $table = $this->sanitizer->name($this->input->get('table'));
 
+            if (in_array($action, $actions)) {
                 switch ($action) {
                     case 'optimize':
+                        $table = $this->sanitizer->name($this->input->get('table'));
                         $result = $this->db->query("OPTIMIZE NO_WRITE_TO_BINLOG TABLE `$table`");
                         $this->message($owner.' '.$this->_('optimized table: '.$table));
                         break;
