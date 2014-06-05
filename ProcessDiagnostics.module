@@ -66,7 +66,7 @@ class ProcessDiagnostics extends Process
 
     private function loadDiagnosesModules() {
         foreach($this->modules as $module) {
-            if (preg_match('%^Diagnose%Uis', $module->name)) {
+            if ('Diagnose' === substr($module->name, 0, 8)) {
                 $this->modules->get($module->name);
             }
         }
