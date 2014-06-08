@@ -239,7 +239,7 @@ class DiagnoseDatabase extends Wire implements Module
             $valid_actions = array('optimize');
             $action = $event->arguments(1);
 
-            if (in_array($action, $actions)) {
+            if (in_array($action, $valid_actions)) {
                 switch ($action) {
                     case 'optimize':
                         $table = $this->sanitizer->name($this->input->get('table'));
