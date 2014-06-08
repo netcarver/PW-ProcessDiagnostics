@@ -133,7 +133,8 @@ class DiagnoseDatabase extends Wire implements Module
             $wasted = '';
             if ($t_Data_free) {
                 $wasted = '<br>'. $this->_('Overhead: ') . ProcessDiagnostics::humanSize($t_Data_free);
-                $warnings[] = '<a href="?owner='.__CLASS__.'&action=optimize&table='.$t_Name.'">'.$this->_('Optimize').'</a>' . $this->_(' table to reclaim space and reorganize indexes.');
+                $warnings[] = '<a href="?owner='.__CLASS__.'&action=optimize&table='.$t_Name.'">'.$this->_('Optimize').'</a> ' .
+                    $this->_(' table to reclaim space and reorganize indexes.');
             }
 
             $t_Data_length  = $this->_('Data: ')  . ProcessDiagnostics::humanSize($t_Data_length);
