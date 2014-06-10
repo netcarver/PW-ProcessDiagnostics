@@ -99,7 +99,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
             if($core == false) {
                 // if not cached
 
-                if(empty($this->getCache($module->className()))) {
+                if(!count($this->getCache($module->className()))) {
                     $results[] = array(
                         'title'  => $moduleInfo['title'].' ('.$module->className().')',
                         'value'  => '<span class="module'.$module->className().' moduleValue" data-version="'.$localVersion.'" data-module="'.$module->className().'"></span>',
