@@ -166,5 +166,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
 
     public function __set($a, $b) {}
 
-    public static function getModuleConfigInputfields(array $data) {}
+    public static function getModuleConfigInputfields(array $data) {
+        return array();
+    }
 }
