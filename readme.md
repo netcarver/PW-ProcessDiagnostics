@@ -1,10 +1,10 @@
 Process Diagnostics
 ===================
 
-Introducing _ProcessDiagnostics_ and it's helper module suite. (Is this ProcessWire's first community-created module suite?)
+Introducing __ProcessDiagnostics__ and it's helper module suite. (Is this ProcessWire's first community-created module suite?)
 
-!https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-19487500-1401132201_thumb.png!
-!https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-70031800-1401214763_thumb.jpg!
+![Example Screenshot in English](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-19487500-1401132201_thumb.png)!
+![Example Screenshot in German](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-70031800-1401214763_thumb.jpg)!
 
 Description
 -----------
@@ -34,12 +34,12 @@ Diagnostic Providers
 
 The current diagnostic providers include...
 
-- _DiagnosePhp_ - Simple diagnostics about the PHP envirnoment on the server
-- _DiagnoseModules_ - An ajax based module version checker by @Nico
-- _DiagnoseImagehandler_ - Lets you know about GD + Imagick capabilities by @horst
-- _DiagnoseDatabase_ - Checks each DB table and lets you know what engine and charset are in use
-- _DiagnoseWebserver_ - Checks the webserver setup
-- _DiagnoseFilesystem_ - Looks at how your directory and files are configured and warns of permission issues (currently incomplete)
+- __DiagnosePhp__ - Simple diagnostics about the PHP envirnoment on the server
+- __DiagnoseModules__ - An ajax based module version checker by @Nico
+- __DiagnoseImagehandler__ - Lets you know about GD + Imagick capabilities by @horst
+- __DiagnoseDatabase__ - Checks each DB table and lets you know what engine and charset are in use
+- __DiagnoseWebserver__ - Checks the webserver setup
+- __DiagnoseFilesystem__ - Looks at how your directory and files are configured and warns of permission issues (currently incomplete)
 
 Some of them need extending and are currently little more than skeletons. If you really want a bare bones demonstration
 module then take a look at _DiagnoseExample_
