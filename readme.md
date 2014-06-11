@@ -3,8 +3,8 @@ Process Diagnostics
 
 Introducing __ProcessDiagnostics__ and it's helper module suite. (Is this ProcessWire's first community-created module suite?)
 
-![Example Screenshot in English](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-19487500-1401132201_thumb.png)!
-![Example Screenshot in German](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-70031800-1401214763_thumb.jpg)!
+![Example Screenshot in English](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-19487500-1401132201_thumb.png)
+![Example Screenshot in German](https://processwire.com/talk/uploads/monthly_05_2014/post-465-0-70031800-1401214763_thumb.jpg)
 
 Description
 -----------
