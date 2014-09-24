@@ -57,7 +57,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
 
 
     private function ajaxRemoteVersion($moduleClassName) {
-        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);
+        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);       
         $localVersion = $this->formatVersion($moduleInfo['version']);
 
         $url = trim($this->defaultServiceUrl, '/') . "/".$moduleClassName."/?apikey=" . $this->defaultServiceKey;
@@ -86,8 +86,11 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         foreach($this->modules as $module) {
 
             $moduleInfo = wire('modules')->getModuleInfo($module->className());
+            
             // don't show core modules
-            if(!empty($info['permanent'])) continue;
+            $filename = $this->config->urls->{$module->className()};
+            if(preg_match('%^\/wire\/%Uis', $filename)) continue;
+            
             $localVersion = $this->formatVersion($moduleInfo['version']);
 
             // check if core module
