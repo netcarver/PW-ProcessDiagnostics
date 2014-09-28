@@ -11,7 +11,7 @@ class DiagnosePhp extends Wire implements Module
         return array(
             'title'     => __('PHP Diagnostics', __FILE__),
             'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
-            'version'   => 2,
+            'version'   => 3,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -73,6 +73,21 @@ class DiagnosePhp extends Wire implements Module
             'action' => '',
         );
 
+        $max_execution_time = trim(ini_get('max_execution_time'));
+        $results[] = array(
+            'title'  => $this->_('Maximum execution time'),
+            'value'  => $max_execution_time,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        $max_input_time = trim(ini_get('max_input_time'));
+        $results[] = array(
+            'title'  => $this->_('Maximum input time'),
+            'value'  => $max_input_time,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
         $api     = null;   // string  full api info
         $sys     = null;   // string  full sys info
 
