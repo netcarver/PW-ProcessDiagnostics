@@ -11,7 +11,7 @@ class DiagnosePhp extends Wire implements Module
         return array(
             'title'     => __('PHP Diagnostics', __FILE__),
             'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
-            'version'   => 4,
+            'version'   => 5,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -75,7 +75,7 @@ class DiagnosePhp extends Wire implements Module
 
         $max_execution_time = trim(ini_get('max_execution_time'));
         $can_change = set_time_limit($max_execution_time);
-        $can_change = ($can_change) ? $this->_("This can be set by calling set_time_limit().") : $this->_("Fixed. Calling set_time_limit() has no effect.");
+        $can_change = ($can_change) ? $this->_("This can be extended by calling set_time_limit().") : $this->_("Fixed. Calling set_time_limit() has no effect.");
         $results[] = array(
             'title'  => $this->_('Maximum execution time'),
             'value'  => $max_execution_time,
