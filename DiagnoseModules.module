@@ -10,7 +10,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         return array(
             'title'     => __('Module version checking', __FILE__),
             'summary'   => __('Allows collection of module version diagnostics', __FILE__),
-            'version'   => 1,
+            'version'   => 101,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -41,7 +41,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         // reset cache
         $updated = $this->getCache('_updated');
         $updated = $updated[0];
-        if((time() - $updated) > $this->maxCacheAge) $this->resetCache();
+        if((time() - $updated) > $this->maxCacheAge || (int)$this->input->get->modulecachereset == 1) $this->resetCache();
 
         // Javascript config and script
         $this->config->js('DiagnosticsModules', $this->lang);
@@ -57,7 +57,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
 
 
     private function ajaxRemoteVersion($moduleClassName) {
-        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);
+        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);       
         $localVersion = $this->formatVersion($moduleInfo['version']);
 
         $url = trim($this->defaultServiceUrl, '/') . "/".$moduleClassName."/?apikey=" . $this->defaultServiceKey;
@@ -86,6 +86,11 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         foreach($this->modules as $module) {
 
             $moduleInfo = wire('modules')->getModuleInfo($module->className());
+            
+            // don't show core modules
+            $filename = $this->config->urls->{$module->className()};
+            if(preg_match('%^\/wire\/%Uis', $filename)) continue;
+            
             $localVersion = $this->formatVersion($moduleInfo['version']);
 
             // check if core module
