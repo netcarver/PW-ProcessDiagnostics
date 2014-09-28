@@ -56,6 +56,22 @@ class DiagnosePhp extends Wire implements Module
             'action' => ''
         );
 
+
+        $post_max_size = trim(ini_get('post_max_size'));
+        $results[] = array(
+            'title'  => $this->_('Post Max Size'),
+            'value'  => $post_max_size,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        $upload_max_filesize = trim(ini_get('upload_max_filesize'));
+        $results[] = array(
+            'title'  => $this->_('Upload Max Filesize'),
+            'value'  => $upload_max_filesize,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
         $api     = null;   // string  full api info
         $sys     = null;   // string  full sys info
 
