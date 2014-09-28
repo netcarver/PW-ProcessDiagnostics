@@ -11,7 +11,7 @@ class DiagnosePhp extends Wire implements Module
         return array(
             'title'     => __('PHP Diagnostics', __FILE__),
             'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
-            'version'   => 1,
+            'version'   => 2,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -72,6 +72,7 @@ class DiagnosePhp extends Wire implements Module
             'status' => ProcessDiagnostics::$ok,
             'action' => '',
         );
+
         $api     = null;   // string  full api info
         $sys     = null;   // string  full sys info
 

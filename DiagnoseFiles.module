@@ -16,7 +16,7 @@ class DiagnoseFiles extends Wire implements Module
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',
-            'author'    => 'Stephen Dickinson, QBox',
+            'author'    => 'Stephen Dickinson, QBox.co',
         );
     }
 
