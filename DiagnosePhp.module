@@ -11,7 +11,7 @@ class DiagnosePhp extends Wire implements Module
         return array(
             'title'     => __('PHP Diagnostics', __FILE__),
             'summary'   => __('Allows collection of PHP diagnostics', __FILE__),
-            'version'   => 5,
+            'version'   => 6,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -69,6 +69,14 @@ class DiagnosePhp extends Wire implements Module
         $results[] = array(
             'title'  => $this->_('Upload Max Filesize'),
             'value'  => $upload_max_filesize,
+            'status' => ProcessDiagnostics::$ok,
+            'action' => '',
+        );
+
+        $max_input_vars = trim(ini_get('max_input_vars'));
+        $results[] = array(
+            'title'  => $this->_('Max Input Vars'),
+            'value'  => $max_input_vars,
             'status' => ProcessDiagnostics::$ok,
             'action' => '',
         );
