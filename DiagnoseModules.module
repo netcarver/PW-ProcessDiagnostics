@@ -57,7 +57,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
 
 
     private function ajaxRemoteVersion($moduleClassName) {
-        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);       
+        $moduleInfo = wire('modules')->getModuleInfo($moduleClassName);
         $localVersion = $this->formatVersion($moduleInfo['version']);
 
         $url = trim($this->defaultServiceUrl, '/') . "/".$moduleClassName."/?apikey=" . $this->defaultServiceKey;
@@ -86,11 +86,11 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         foreach($this->modules as $module) {
 
             $moduleInfo = wire('modules')->getModuleInfo($module->className());
-            
+
             // don't show core modules
             $filename = $this->config->urls->{$module->className()};
             if(preg_match('%^\/wire\/%Uis', $filename)) continue;
-            
+
             $localVersion = $this->formatVersion($moduleInfo['version']);
 
             // check if core module
@@ -137,11 +137,11 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
         $data = wire('modules')->getModuleConfigData($this);
         $data[$key] = $value;
         $data['_updated'] = time();
-        wire('modules')->saveModuleConfigData($this, $data); 
+        wire('modules')->saveModuleConfigData($this, $data);
     }
 
     private function getCache($key) {
-        $data = wire('modules')->getModuleConfigData($this); 
+        $data = wire('modules')->getModuleConfigData($this);
         if(in_array($key, array_keys($data))) {
             $value = $data[$key];
         } else {
@@ -151,7 +151,7 @@ class DiagnoseModules extends Wire implements Module, ConfigurableModule
     }
 
     private function resetCache() {
-        wire('modules')->saveModuleConfigData($this, array()); 
+        wire('modules')->saveModuleConfigData($this, array());
         $this->setCache('_updated', time());
     }
 
