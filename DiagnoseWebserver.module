@@ -10,7 +10,7 @@ class DiagnoseWebserver extends Wire implements Module
         return array(
             'title'     => __('Webserver Diagnostics', __FILE__),
             'summary'   => __('Allows collection of webserver diagnostics', __FILE__),
-            'version'   => 1,
+            'version'   => 2,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
