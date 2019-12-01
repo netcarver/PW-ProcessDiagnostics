@@ -10,7 +10,7 @@ class DiagnoseDatabase extends Wire implements Module
         return array(
             'title'     => __('Database Diagnostics', __FILE__),
             'summary'   => __('Allows collection of database diagnostics', __FILE__),
-            'version'   => 1,
+            'version'   => 2,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -141,7 +141,7 @@ class DiagnoseDatabase extends Wire implements Module
             $t_Index_length = $this->_('Index: ') . ProcessDiagnostics::humanSize($t_Index_length);
 
             if (!preg_match("/^{$this->wire->config->dbCharset}/ui", $t_Collation)) {
-                if ($t_Name !== 'field_pass') {
+                if ($t_Name !== 'field_pass' && $t_Name !== 'process_forgot_password') {
                     $charset = explode('_', $t_Collation);
                     $charset = $charset[0];
                     $warnings[] = $this->_('Character set mismatch with connection. This <em>might</em> lead to data corruption. Sanitise your data to match '.$charset.' before sending it to the DB.');
