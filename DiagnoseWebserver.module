@@ -16,7 +16,7 @@ class DiagnoseWebserver extends Wire implements Module
             'singular'  => true,
             'requires'  => 'ProcessDiagnostics',
             'installs'  => 'ProcessDiagnostics',
-            'author'    => 'Stephen Dickinson, QBox',
+            'author'    => 'Netcarver',
         );
     }
 
@@ -87,7 +87,7 @@ class DiagnoseWebserver extends Wire implements Module
                     'value'  => ProcessDiagnostics::describeFSInfo($httext_info),
                     'status' => ($ht_mv_needed || $httext_info['exists']) ? ProcessDiagnostics::$fail : ProcessDiagnostics::$ok,
                     'action' => $ht_mv_needed ? $this->_('Rename htaccess.txt to .htaccess') :
-                    $httext_info['exists'] ? $this->_('Delete htaccess.txt') : '',
+                    ($httext_info['exists'] ? $this->_('Delete htaccess.txt') : ''),
                     );
             }
 
