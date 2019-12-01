@@ -10,7 +10,7 @@ class DiagnoseDatabase extends Wire implements Module
         return array(
             'title'     => __('Database Diagnostics', __FILE__),
             'summary'   => __('Allows collection of database diagnostics', __FILE__),
-            'version'   => 2,
+            'version'   => 3,
             'permanent' => false,
             'autoload'  => false,
             'singular'  => true,
@@ -34,8 +34,8 @@ class DiagnoseDatabase extends Wire implements Module
     public function collectVarsLike($pattern)
     {
         $out = array();
-        $group = $this->db->query('SHOW VARIABLES LIKE "'.$pattern.'"');
-        while ($r = $group->fetch_assoc()) {
+        $group = $this->database->query('SHOW VARIABLES LIKE "'.$pattern.'"');
+        while ($r = $group->fetch(PDO::FETCH_ASSOC)) {
             $out[$r['Variable_name']] = $r['Value'];
         }
         return $out;
@@ -63,8 +63,8 @@ class DiagnoseDatabase extends Wire implements Module
      */
     public function checkTables2()
     {
-        $version = $this->db->query('SELECT VERSION() as version');
-        $version = $version->fetch_assoc();
+        $version = $this->database->query('SELECT VERSION() as version');
+        $version = $version->fetch(PDO::FETCH_ASSOC);
         $version = $version['version'];
         $results[] = ProcessDiagnostics::row($this->_('Server Version'), $version);
 
@@ -114,8 +114,8 @@ class DiagnoseDatabase extends Wire implements Module
 
         $results[] = ProcessDiagnostics::row($this->_('Using Database'), $this->wire->config->dbName);
 
-        $tables = $this->db->query("SHOW TABLE STATUS");
-        while ($t = $tables->fetch_assoc()) {
+        $tables = $this->database->query("SHOW TABLE STATUS");
+        while ($t = $tables->fetch(PDO::FETCH_ASSOC)) {
             $warnings = array();
             $fails    = array();
             $notes    = array();
@@ -124,8 +124,8 @@ class DiagnoseDatabase extends Wire implements Module
 
             // MyISAM maintains an exact row count. Other engines don't necessarily so get the actual row count...
             if ('MyISAM' !== $t_Engine) {
-                $count  = $this->db->query("SELECT COUNT(*) AS `rows` FROM `$t_Name`");
-                $count  = $count->fetch_assoc();
+                $count  = $this->database->query("SELECT COUNT(*) AS `rows` FROM `$t_Name`");
+                $count  = $count->fetch(PDO::FETCH_ASSOC);
                 $t_Rows = $count['rows'];
             }
 
@@ -166,14 +166,14 @@ class DiagnoseDatabase extends Wire implements Module
         $msgs   = array();
         $tables = array();
 
-        $result = $this->db->query("SHOW TABLES");
-        while ($row = $result->fetch_assoc()) {
+        $result = $this->database->query("SHOW TABLES");
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $tables[] = array_shift($row);
         }
 
         foreach ($tables as $table) {
-            $result = $t->db->query("CHECK TABLE `$table` QUICK");
-            while ($row = $result->fetch_assoc()) {
+            $result = $t->database->query("CHECK TABLE `$table` QUICK");
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
                 switch ($row['Msg_type']) {
                     default:
@@ -183,8 +183,8 @@ class DiagnoseDatabase extends Wire implements Module
                 }
 
 
-                $t = $this->db->query("SHOW CREATE TABLE `$table`");
-                $info = $t->fetch_assoc();
+                $t = $this->database->query("SHOW CREATE TABLE `$table`");
+                $info = $t->fetch(PDO::FETCH_ASSOC);
                 if (preg_match('/ENGINE=([^\s]+)\s/ui', $info['Create Table'], $m)) {
                     $engine = $m[1];
                 } else {
@@ -244,7 +244,7 @@ class DiagnoseDatabase extends Wire implements Module
                 switch ($action) {
                     case 'optimize':
                         $table = $this->sanitizer->name($this->input->get('table'));
-                        $result = $this->db->query("OPTIMIZE NO_WRITE_TO_BINLOG TABLE `$table`");
+                        $result = $this->database->query("OPTIMIZE NO_WRITE_TO_BINLOG TABLE `$table`");
                         $this->message($owner.' '.$this->_('optimized table: '.$table));
                         break;
 
